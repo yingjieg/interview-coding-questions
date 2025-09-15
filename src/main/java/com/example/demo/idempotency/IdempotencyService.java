@@ -1,5 +1,6 @@
 package com.example.demo.idempotency;
 
+import com.example.demo.common.exception.IdempotencyException;
 import com.example.demo.user.UserEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +30,7 @@ public class IdempotencyService {
 
     @Transactional
     public <T> T executeIdempotent(String idempotencyKey, UserEntity user, Object request,
-                                   Supplier<T> operation, Class<T> responseType) {
+                                   Supplier<T> operation, Class<T> responseType) throws IdempotencyException {
         // Check if we already have a record for this idempotency key
         Optional<IdempotencyRecord> existingRecord = idempotencyRepository.findByIdempotencyKey(idempotencyKey);
 
@@ -39,12 +40,12 @@ public class IdempotencyService {
             // Validate request hasn't changed
             String requestHash = generateHash(request);
             if (!record.getRequestHash().equals(requestHash)) {
-                throw new RuntimeException("Idempotency key reused with different request data");
+                throw new IdempotencyException("Idempotency key reused with different request data");
             }
 
             // Check if expired
             if (record.getExpiresAt().isBefore(LocalDateTime.now())) {
-                throw new RuntimeException("Idempotency key has expired");
+                throw new IdempotencyException("Idempotency key has expired");
             }
 
             // Return cached response if completed
@@ -53,13 +54,13 @@ public class IdempotencyService {
                     return objectMapper.readValue(record.getResponseData(), responseType);
                 } catch (JsonProcessingException e) {
                     log.error("Failed to deserialize cached response for key {}: {}", idempotencyKey, e.getMessage());
-                    throw new RuntimeException("Failed to process cached response");
+                    throw new IdempotencyException("Failed to process cached response", e);
                 }
             }
 
             // If still processing, return error
             if (record.getStatus() == IdempotencyStatus.PROCESSING) {
-                throw new RuntimeException("Request is already being processed");
+                throw new IdempotencyException("Request is already being processed");
             }
 
             // If failed, allow retry by deleting the record

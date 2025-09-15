@@ -1,5 +1,6 @@
 package com.example.demo.order.dto;
 
+import com.example.demo.common.validation.ValidVisitDate;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import jakarta.validation.Valid;
@@ -7,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@ValidVisitDate
 public class CreatePurchaseDto {
 
     @NotNull(message = "User ID is required")

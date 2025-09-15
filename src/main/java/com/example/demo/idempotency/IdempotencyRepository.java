@@ -17,5 +17,4 @@ public interface IdempotencyRepository extends JpaRepository<IdempotencyRecord, 
     @Query("DELETE FROM IdempotencyRecord i WHERE i.expiresAt < :now")
     int deleteExpiredRecords(LocalDateTime now);
 
-    boolean existsByIdempotencyKey(String idempotencyKey);
 }

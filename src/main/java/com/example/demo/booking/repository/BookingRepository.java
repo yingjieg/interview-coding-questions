@@ -15,10 +15,6 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
 
     List<BookingEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-    Optional<BookingEntity> findByOrderId(Long orderId);
-
-    List<BookingEntity> findByVisitDateAndBookingStatus(LocalDate visitDate, BookingStatus bookingStatus);
-
     @Query("SELECT b FROM BookingEntity b LEFT JOIN FETCH b.order LEFT JOIN FETCH b.user WHERE b.id = :bookingId")
     BookingEntity findByIdWithDetails(Long bookingId);
 
