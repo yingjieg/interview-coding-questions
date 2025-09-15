@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orchestration - Ticket Booking System</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/json-enc.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .nav a:hover {
+            background: #0056b3;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .ticket-group {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .optional-booking {
+            border: 2px dashed #007bff;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Purchase Orchestration</h1>
+        <p>Complete ticket purchase with optional visit booking in single transaction</p>
+
+        <nav class="nav">
+            <a href="/">Home</a>
+            <a href="/users">Users</a>
+            <a href="/bookings">Bookings</a>
+            <a href="/purchase">Purchase</a>
+        </nav>
+
+        <!-- Purchase with Optional Booking -->
+        <div class="container">
+            <h2>Purchase Tickets + Optional Booking</h2>
+            <form id="purchase-form" onsubmit="submitPurchase(event)"
+                  hx-target="#purchase-response"
+                  hx-headers='{"Idempotency-Key": "test-purchase-key-001"}'>
+
+                <div class="form-group">
+                    <label for="userId">User ID:</label>
+                    <input type="number" id="userId" name="userId" value="1" required>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="includeBooking" onchange="toggleBookingFields()">
+                    <label for="includeBooking">Include Visit Booking</label>
+                </div>
+
+                <!-- Optional Booking Section -->
+                <div id="booking-section" class="container optional-booking" style="display: none;">
+                    <h3>Visit Booking Details</h3>
+
+                    <div class="form-group">
+                        <label for="visitDate">Visit Date (must be tomorrow or later):</label>
+                        <input type="date" id="visitDate" name="visitDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="documentType">Document Type:</label>
+                        <select id="documentType" name="documentType">
+                            <option value="">Select Document Type</option>
+                            <option value="PASSPORT">Passport</option>
+                            <option value="MAINLAND_TRAVEL_PERMIT">Mainland Travel Permit</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="documentNumber">Document Number:</label>
+                        <input type="text" id="documentNumber" name="documentNumber" value="B98765432" maxlength="50">
+                        <small>Required when visit date is provided</small>
+                    </div>
+                </div>
+
+                <!-- Tickets (Always Required - Exactly 4) -->
+                <h3>Ticket Selection (Exactly 4 Required)</h3>
+
+                <!-- Ticket 1 -->
+                <div class="ticket-group">
+                    <h4>Ticket 1</h4>
+                    <div class="form-group">
+                        <label>Attraction Name:</label>
+                        <input type="text" name="tickets.0.attractionName" value="Space Mountain" required>
+                    </div>
+                </div>
+
+                <!-- Ticket 2 -->
+                <div class="ticket-group">
+                    <h4>Ticket 2</h4>
+                    <div class="form-group">
+                        <label>Attraction Name:</label>
+                        <input type="text" name="tickets.1.attractionName" value="Pirates of Caribbean" required>
+                    </div>
+                </div>
+
+                <!-- Ticket 3 -->
+                <div class="ticket-group">
+                    <h4>Ticket 3</h4>
+                    <div class="form-group">
+                        <label>Attraction Name:</label>
+                        <input type="text" name="tickets.2.attractionName" value="Haunted Mansion" required>
+                    </div>
+                </div>
+
+                <!-- Ticket 4 -->
+                <div class="ticket-group">
+                    <h4>Ticket 4</h4>
+                    <div class="form-group">
+                        <label>Attraction Name:</label>
+                        <input type="text" name="tickets.3.attractionName" value="Thunder Mountain" required>
+                    </div>
+                </div>
+
+                <button type="submit">Complete Purchase</button>
+            </form>
+            <div id="purchase-response" class="response"></div>
+        </div>
+
+        <!-- Pre-filled Examples -->
+        <div class="container">
+            <h2>Quick Test Examples</h2>
+
+            <button hx-post="/api/purchases"
+                    hx-target="#example-response-1"
+                    hx-headers='{"Idempotency-Key": "test-purchase-tickets-only-001"}'
+                    hx-vals='{"userId": 1, "tickets": [{"attractionName": "Test Ride 1"}, {"attractionName": "Test Ride 2"}, {"attractionName": "Test Ride 3"}, {"attractionName": "Test Ride 4"]}'>
+                Purchase Tickets Only (No Booking)
+            </button>
+            <div id="example-response-1" class="response"></div>
+
+            <button hx-post="/api/purchases"
+                    hx-target="#example-response-2"
+                    hx-headers='{"Idempotency-Key": "test-purchase-with-booking-002"}'
+                    hx-vals='{"userId": 1, "visitDate": "2024-12-25", "documentType": "PASSPORT", "documentNumber": "C11223344", "tickets": [{"attractionName": "Holiday Ride 1"}, {"attractionName": "Holiday Ride 2"}, {"attractionName": "Holiday Ride 3"}, {"attractionName": "Holiday Ride 4"}]}'>
+                Purchase with Booking (Christmas Day)
+            </button>
+            <div id="example-response-2" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        // Set tomorrow as the minimum date
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
+        document.getElementById('visitDate').min = tomorrowStr;
+        document.getElementById('visitDate').value = tomorrowStr;
+
+        function submitPurchase(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const payload = {
+                userId: parseInt(formData.get('userId')),
+                tickets: [
+                    {
+                        attractionId: 'space-mountain-001',
+                        attractionName: formData.get('tickets.0.attractionName')
+                    },
+                    {
+                        attractionId: 'pirates-caribbean-002',
+                        attractionName: formData.get('tickets.1.attractionName')
+                    },
+                    {
+                        attractionId: 'haunted-mansion-003',
+                        attractionName: formData.get('tickets.2.attractionName')
+                    },
+                    {
+                        attractionId: 'thunder-mountain-004',
+                        attractionName: formData.get('tickets.3.attractionName')
+                    }
+                ]
+            };
+
+            // Add booking fields if checkbox is checked
+            const includeBooking = document.getElementById('includeBooking').checked;
+            if (includeBooking) {
+                const visitDate = formData.get('visitDate');
+                const documentType = formData.get('documentType');
+                const documentNumber = formData.get('documentNumber');
+
+                if (visitDate) payload.visitDate = visitDate;
+                if (documentType) payload.documentType = documentType;
+                if (documentNumber) payload.documentNumber = documentNumber;
+            }
+
+            fetch('/api/purchases', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Idempotency-Key': 'test-purchase-key-001'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                const target = document.getElementById('purchase-response');
+                if (response.ok) {
+                    return response.text().then(text => {
+                        target.className = 'response success';
+                        try {
+                            const json = JSON.parse(text);
+                            target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
+                        } catch (e) {
+                            target.textContent = 'Success: ' + text;
+                        }
+                    });
+                } else {
+                    return response.text().then(text => {
+                        target.className = 'response error';
+                        target.textContent = 'Error: ' + response.status + ' - ' + text;
+                    });
+                }
+            })
+            .catch(error => {
+                const target = document.getElementById('purchase-response');
+                target.className = 'response error';
+                target.textContent = 'Error: ' + error.message;
+            });
+        }
+
+        function toggleBookingFields() {
+            const checkbox = document.getElementById('includeBooking');
+            const bookingSection = document.getElementById('booking-section');
+            const visitDateInput = document.getElementById('visitDate');
+            const documentTypeInput = document.getElementById('documentType');
+            const documentNumberInput = document.getElementById('documentNumber');
+
+            if (checkbox.checked) {
+                bookingSection.style.display = 'block';
+                visitDateInput.required = true;
+                documentTypeInput.required = true;
+                documentNumberInput.required = true;
+            } else {
+                bookingSection.style.display = 'none';
+                visitDateInput.required = false;
+                documentTypeInput.required = false;
+                documentNumberInput.required = false;
+                visitDateInput.value = '';
+                documentTypeInput.value = '';
+                documentNumberInput.value = '';
+            }
+        }
+
+        // Handle HTMX responses
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            const target = document.getElementById(evt.detail.target.id);
+            if (target) {
+                target.className = 'response error';
+                target.textContent = 'Error: ' + evt.detail.xhr.status + ' - ' + evt.detail.xhr.responseText;
+            }
+        });
+
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            const target = document.getElementById(evt.detail.target.id);
+            if (target && evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+                target.className = 'response success';
+                try {
+                    const json = JSON.parse(evt.detail.xhr.responseText);
+                    target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
+                } catch (e) {
+                    target.textContent = 'Success: ' + evt.detail.xhr.responseText;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

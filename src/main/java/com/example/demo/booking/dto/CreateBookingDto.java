@@ -1,5 +1,6 @@
 package com.example.demo.booking.dto;
 
+import com.example.demo.booking.entity.DocumentType;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
@@ -15,7 +16,10 @@ public class CreateBookingDto {
     @Future(message = "Visit date must be in the future")
     private LocalDate visitDate;
 
-    @NotBlank(message = "Passport is required")
-    @Size(max = 50, message = "Passport cannot exceed 50 characters")
-    private String passport;
+    @NotNull(message = "Document type is required")
+    private DocumentType documentType;
+
+    @NotBlank(message = "Document number is required")
+    @Size(max = 50, message = "Document number cannot exceed 50 characters")
+    private String documentNumber;
 }

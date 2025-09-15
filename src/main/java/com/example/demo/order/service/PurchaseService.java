@@ -123,7 +123,8 @@ public class PurchaseService {
         CreateBookingDto createBookingDto = new CreateBookingDto();
         createBookingDto.setOrderId(order.getId());
         createBookingDto.setVisitDate(createPurchaseDto.getVisitDate());
-        createBookingDto.setPassport(createPurchaseDto.getPassport());
+        createBookingDto.setDocumentType(createPurchaseDto.getDocumentType());
+        createBookingDto.setDocumentNumber(createPurchaseDto.getDocumentNumber());
 
         BookingResponseDto booking = bookingService.createBooking(createBookingDto);
         log.info("Booking created: {} for order {}", booking.getId(), order.getId());

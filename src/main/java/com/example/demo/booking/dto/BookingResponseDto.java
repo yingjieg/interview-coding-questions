@@ -1,6 +1,7 @@
 package com.example.demo.booking.dto;
 
 import com.example.demo.booking.entity.BookingStatus;
+import com.example.demo.booking.entity.DocumentType;
 import com.example.demo.booking.entity.TicketSubmissionStatus;
 import lombok.Data;
 import java.time.LocalDate;
@@ -12,7 +13,8 @@ public class BookingResponseDto {
     private Long orderId;
     private Long userId;
     private LocalDate visitDate;
-    private String passport;
+    private DocumentType documentType;
+    private String documentNumber;
     private BookingStatus bookingStatus;
     private TicketSubmissionStatus ticketSubmissionStatus;
     private LocalDateTime ticketSubmittedAt;

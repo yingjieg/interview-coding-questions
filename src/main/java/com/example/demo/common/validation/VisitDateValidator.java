@@ -19,20 +19,43 @@ public class VisitDateValidator implements ConstraintValidator<ValidVisitDate, C
             return true; // Let other validators handle null values
         }
 
+        boolean isValid = true;
+        context.disableDefaultConstraintViolation();
+
         LocalDate visitDate = dto.getVisitDate();
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
+        // Check if visit date is at least tomorrow
         if (visitDate.isBefore(tomorrow)) {
-            context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
                 "Visit date must be at least tomorrow. Cannot book for today or past dates. " +
                 "Visit date provided: " + visitDate + ", minimum allowed: " + tomorrow
             )
             .addPropertyNode("visitDate")
             .addConstraintViolation();
-            return false;
+            isValid = false;
         }
 
-        return true;
+        // Check if document type is provided when visit date is provided
+        if (dto.getDocumentType() == null) {
+            context.buildConstraintViolationWithTemplate(
+                "Document type is required when visit date is provided"
+            )
+            .addPropertyNode("documentType")
+            .addConstraintViolation();
+            isValid = false;
+        }
+
+        // Check if document number is provided when visit date is provided
+        if (dto.getDocumentNumber() == null || dto.getDocumentNumber().trim().isEmpty()) {
+            context.buildConstraintViolationWithTemplate(
+                "Document number is required when visit date is provided"
+            )
+            .addPropertyNode("documentNumber")
+            .addConstraintViolation();
+            isValid = false;
+        }
+
+        return isValid;
     }
 }

@@ -10,7 +10,6 @@ import java.util.List;
 public class OrderResponseDto {
     private Long id;
     private Long userId;
-    private BigDecimal totalAmount;
     private OrderStatus orderStatus;
     private LocalDateTime createdAt;
     private List<OrderItemResponseDto> orderItems;
@@ -20,6 +19,5 @@ public class OrderResponseDto {
         private Long id;
         private String attractionName;
         private String attractionExternalId;
-        private BigDecimal unitPrice;
     }
 }

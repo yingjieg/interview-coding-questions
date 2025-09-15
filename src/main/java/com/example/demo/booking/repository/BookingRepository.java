@@ -2,6 +2,7 @@ package com.example.demo.booking.repository;
 
 import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.BookingStatus;
+import com.example.demo.booking.entity.TicketSubmissionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -21,4 +22,8 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
     boolean existsByOrderId(Long orderId);
 
     boolean existsByUserIdAndVisitDate(Long userId, LocalDate visitDate);
+
+    @Query("SELECT b FROM BookingEntity b LEFT JOIN FETCH b.order LEFT JOIN FETCH b.user " +
+           "WHERE b.bookingStatus = 'CONFIRMED' AND b.ticketSubmissionStatus = 'NOT_SUBMITTED' AND b.visitDate = :visitDate")
+    List<BookingEntity> findBookingsForTicketSubmission(LocalDate visitDate);
 }

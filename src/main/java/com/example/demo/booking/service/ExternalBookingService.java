@@ -61,4 +61,26 @@ public class ExternalBookingService {
             return false;
         }
     }
+
+    public boolean submitTickets(Long bookingId, Long orderId, LocalDate visitDate) {
+        log.info("Submitting tickets to external service for booking {} (order {}) on date {}",
+                bookingId, orderId, visitDate);
+
+        // TODO: Implement actual external ticket submission API call
+        // This would typically:
+        // - Send ticket details to external ticketing system
+        // - Include order items/attractions information
+        // - Provide visit date and booking confirmation
+        // - Return confirmation of ticket submission
+
+        // For now, simulate successful ticket submission
+        try {
+            Thread.sleep(200); // Simulate network delay for ticket processing
+            log.info("Tickets submitted successfully to external service for booking {}", bookingId);
+            return true;
+        } catch (InterruptedException e) {
+            log.error("Ticket submission failed for booking {}: {}", bookingId, e.getMessage());
+            return false;
+        }
+    }
 }

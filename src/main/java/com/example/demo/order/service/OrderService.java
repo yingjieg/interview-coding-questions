@@ -1,12 +1,10 @@
 package com.example.demo.order.service;
 
-
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
 import com.example.demo.common.exception.EntityNotFoundException;
 import com.example.demo.order.dto.CreateOrderDto;
 import com.example.demo.order.dto.OrderResponseDto;
-import com.example.demo.order.dto.TicketDto;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.entity.OrderItemEntity;
 import com.example.demo.order.entity.OrderStatus;
@@ -18,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -54,15 +51,9 @@ public class OrderService {
                 "User cannot have more than 4 unfinished orders. Current unfinished orders: " + unfinishedOrdersCount);
         }
 
-        // Calculate total amount
-        BigDecimal totalAmount = createOrderDto.getTickets().stream()
-                .map(TicketDto::getUnitPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         // Create order entity
         OrderEntity order = new OrderEntity();
         order.setUser(user);
-        order.setTotalAmount(totalAmount);
         order.setOrderStatus(OrderStatus.PENDING);
 
         // Create order items using MapStruct
@@ -74,8 +65,8 @@ public class OrderService {
         // Save order
         OrderEntity savedOrder = orderRepository.save(order);
 
-        log.info("Order created successfully for user {} with total amount {}",
-                user.getEmail(), totalAmount);
+        log.info("Order created successfully for user {}",
+                user.getEmail());
 
         return orderMapper.toResponseDto(savedOrder);
     }

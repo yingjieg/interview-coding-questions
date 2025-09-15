@@ -5,6 +5,7 @@ import com.example.demo.booking.dto.CreateBookingDto;
 import com.example.demo.booking.dto.UpdateBookingDto;
 import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.BookingStatus;
+import com.example.demo.booking.entity.TicketSubmissionStatus;
 import com.example.demo.booking.mapper.BookingMapper;
 import com.example.demo.booking.repository.BookingRepository;
 import com.example.demo.common.exception.BusinessRuleCode;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -70,7 +72,8 @@ public class BookingService {
         booking.setOrder(order);
         booking.setUser(order.getUser());
         booking.setVisitDate(createBookingDto.getVisitDate());
-        booking.setPassport(createBookingDto.getPassport());
+        booking.setDocumentType(createBookingDto.getDocumentType());
+        booking.setDocumentNumber(createBookingDto.getDocumentNumber());
         booking.setBookingStatus(BookingStatus.PENDING);
 
         // Save booking first
@@ -172,5 +175,60 @@ public class BookingService {
                 "EXTERNAL_BOOKING_SERVICE",
                 "Failed to cancel booking through external system");
         }
+    }
+
+    @Transactional
+    public BookingResponseDto submitTickets(Long bookingId) {
+        BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
+        if (booking == null) {
+            throw new EntityNotFoundException("Booking", bookingId);
+        }
+
+        // Check if booking is confirmed
+        if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.INVALID_BOOKING_STATUS,
+                "Cannot submit tickets for booking that is not confirmed. Current status: " + booking.getBookingStatus());
+        }
+
+        // Check if tickets are already submitted
+        if (booking.getTicketSubmissionStatus() == TicketSubmissionStatus.SUBMITTED) {
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.TICKETS_ALREADY_SUBMITTED,
+                "Tickets have already been submitted for this booking");
+        }
+
+        // Check if visit date is in the past
+        if (booking.getVisitDate().isBefore(LocalDate.now())) {
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.CANNOT_SUBMIT_PAST_TICKETS,
+                "Cannot submit tickets for past visit date: " + booking.getVisitDate());
+        }
+
+        // Call external service to submit tickets
+        boolean submissionSuccess = externalBookingService.submitTickets(
+                booking.getId(), booking.getOrder().getId(), booking.getVisitDate());
+
+        if (submissionSuccess) {
+            booking.setTicketSubmissionStatus(TicketSubmissionStatus.SUBMITTED);
+            booking.setTicketSubmittedAt(LocalDateTime.now());
+            bookingRepository.save(booking);
+
+            log.info("Tickets submitted successfully for booking {} (order {}) on visit date {}",
+                    booking.getId(), booking.getOrder().getId(), booking.getVisitDate());
+        } else {
+            throw new ExternalServiceException(
+                "EXTERNAL_TICKETING_SERVICE",
+                "Failed to submit tickets to external system");
+        }
+
+        return bookingMapper.toResponseDto(booking);
+    }
+
+    public List<BookingResponseDto> getBookingsForTicketSubmission() {
+        // Get bookings that need ticket submission (confirmed, not yet submitted, visit date is tomorrow)
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        List<BookingEntity> bookings = bookingRepository.findBookingsForTicketSubmission(tomorrow);
+        return bookingMapper.toResponseDtos(bookings);
     }
 }

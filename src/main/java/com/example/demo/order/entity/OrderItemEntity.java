@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "order_items")
 @Data
@@ -28,7 +26,4 @@ public class OrderItemEntity {
 
     @Column(name = "attraction_external_id", nullable = false, length = 50)
     private String attractionExternalId;
-
-    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice;
 }
