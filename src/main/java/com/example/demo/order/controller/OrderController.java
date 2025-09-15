@@ -1,5 +1,7 @@
 package com.example.demo.order.controller;
 
+import com.example.demo.common.exception.BusinessRuleCode;
+import com.example.demo.common.exception.BusinessRuleViolationException;
 import com.example.demo.order.dto.CreateOrderDto;
 import com.example.demo.order.dto.OrderResponseDto;
 import com.example.demo.order.service.OrderService;
@@ -30,7 +32,7 @@ public class OrderController {
             @Valid @RequestBody CreateOrderDto createOrderDto) {
 
         if (idempotencyKey == null || idempotencyKey.trim().isEmpty()) {
-            throw new RuntimeException("Idempotency-Key header is required for order operations");
+            throw new BusinessRuleViolationException(BusinessRuleCode.MISSING_IDEMPOTENCY_KEY);
         }
 
         OrderResponseDto order = orderService.createOrder(createOrderDto);

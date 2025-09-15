@@ -14,4 +14,8 @@ public class CreateBookingDto {
     @NotNull(message = "Visit date is required")
     @Future(message = "Visit date must be in the future")
     private LocalDate visitDate;
+
+    @NotBlank(message = "Passport is required")
+    @Size(max = 50, message = "Passport cannot exceed 50 characters")
+    private String passport;
 }

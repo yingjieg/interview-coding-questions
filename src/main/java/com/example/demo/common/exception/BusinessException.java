@@ -1,6 +1,6 @@
 package com.example.demo.common.exception;
 
-public class BusinessException extends Exception {
+public class BusinessException extends RuntimeException {
     private final String errorCode;
     private final Object[] args;
 

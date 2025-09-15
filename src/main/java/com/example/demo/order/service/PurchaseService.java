@@ -5,8 +5,9 @@ import com.example.demo.booking.service.TicketSubmissionOrchestrator;
 import com.example.demo.booking.service.TicketSubmissionResult;
 import com.example.demo.booking.dto.BookingResponseDto;
 import com.example.demo.booking.dto.CreateBookingDto;
-import com.example.demo.common.exception.EntityNotFoundException;
 import com.example.demo.common.exception.BusinessException;
+import com.example.demo.common.exception.BusinessRuleViolationException;
+import com.example.demo.common.exception.EntityNotFoundException;
 import com.example.demo.common.exception.IdempotencyException;
 import com.example.demo.idempotency.IdempotencyService;
 import com.example.demo.order.dto.*;
@@ -92,6 +93,10 @@ public class PurchaseService {
             logSuccess(order, booking);
             return response;
 
+        } catch (BusinessRuleViolationException e) {
+            log.warn("Business rule violation during purchase for user {}: {}",
+                createPurchaseDto.getUserId(), e.getMessage());
+            throw e; // Re-throw business rule violations as-is
         } catch (Exception e) {
             log.error("Unexpected error during purchase for user {}: {}",
                 createPurchaseDto.getUserId(), e.getMessage(), e);
@@ -118,6 +123,7 @@ public class PurchaseService {
         CreateBookingDto createBookingDto = new CreateBookingDto();
         createBookingDto.setOrderId(order.getId());
         createBookingDto.setVisitDate(createPurchaseDto.getVisitDate());
+        createBookingDto.setPassport(createPurchaseDto.getPassport());
 
         BookingResponseDto booking = bookingService.createBooking(createBookingDto);
         log.info("Booking created: {} for order {}", booking.getId(), order.getId());

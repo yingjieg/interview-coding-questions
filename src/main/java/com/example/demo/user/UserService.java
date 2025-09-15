@@ -1,9 +1,10 @@
 package com.example.demo.user;
 
+import com.example.demo.common.exception.BusinessRuleCode;
+import com.example.demo.common.exception.BusinessRuleViolationException;
 import com.example.demo.user.dto.UserRegistrationDto;
 import com.example.demo.user.dto.UserLoginDto;
 import com.example.demo.user.dto.PasswordResetDto;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class UserService {
 
     public UserEntity registerUser(UserRegistrationDto registrationDto) {
         if (userRepository.existsByEmail(registrationDto.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new BusinessRuleViolationException(BusinessRuleCode.EMAIL_ALREADY_EXISTS);
         }
 
         UserEntity user = new UserEntity();

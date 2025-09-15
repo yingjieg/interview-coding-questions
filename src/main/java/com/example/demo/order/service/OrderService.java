@@ -1,5 +1,9 @@
 package com.example.demo.order.service;
 
+
+import com.example.demo.common.exception.BusinessRuleCode;
+import com.example.demo.common.exception.BusinessRuleViolationException;
+import com.example.demo.common.exception.EntityNotFoundException;
 import com.example.demo.order.dto.CreateOrderDto;
 import com.example.demo.order.dto.OrderResponseDto;
 import com.example.demo.order.dto.TicketDto;
@@ -35,11 +39,19 @@ public class OrderService {
     public OrderResponseDto createOrder(CreateOrderDto createOrderDto) {
         // Validate user exists
         UserEntity user = userRepository.findById(createOrderDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + createOrderDto.getUserId()));
+                .orElseThrow(() -> new EntityNotFoundException("User", createOrderDto.getUserId()));
 
         // Validate exactly 4 tickets - double check even though DTO validation should catch this
         if (createOrderDto.getTickets() == null || createOrderDto.getTickets().size() != 4) {
-            throw new RuntimeException("Must select exactly 4 tickets");
+            throw new BusinessRuleViolationException(BusinessRuleCode.INVALID_TICKET_COUNT);
+        }
+
+        // Check if user already has max 4 unfinished orders
+        long unfinishedOrdersCount = orderRepository.countByUserIdAndOrderStatusNot(createOrderDto.getUserId(), OrderStatus.FINISHED);
+        if (unfinishedOrdersCount >= 4) {
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.MAX_UNFINISHED_ORDERS_EXCEEDED,
+                "User cannot have more than 4 unfinished orders. Current unfinished orders: " + unfinishedOrdersCount);
         }
 
         // Calculate total amount
@@ -71,7 +83,7 @@ public class OrderService {
     public OrderResponseDto getOrder(Long orderId) {
         OrderEntity order = orderRepository.findByIdWithItems(orderId);
         if (order == null) {
-            throw new RuntimeException("Order not found with id: " + orderId);
+            throw new EntityNotFoundException("Order", orderId);
         }
         return orderMapper.toResponseDto(order);
     }

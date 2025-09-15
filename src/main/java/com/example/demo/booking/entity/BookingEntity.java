@@ -32,6 +32,9 @@ public class BookingEntity {
     @Column(name = "visit_date", nullable = false)
     private LocalDate visitDate;
 
+    @Column(name = "passport", nullable = false)
+    private String passport;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_status", nullable = false)
     private BookingStatus bookingStatus = BookingStatus.PENDING;

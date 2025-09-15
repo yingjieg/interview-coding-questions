@@ -12,6 +12,7 @@ public class BookingResponseDto {
     private Long orderId;
     private Long userId;
     private LocalDate visitDate;
+    private String passport;
     private BookingStatus bookingStatus;
     private TicketSubmissionStatus ticketSubmissionStatus;
     private LocalDateTime ticketSubmittedAt;

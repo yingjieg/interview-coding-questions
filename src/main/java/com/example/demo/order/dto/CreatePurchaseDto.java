@@ -18,6 +18,9 @@ public class CreatePurchaseDto {
     @Future(message = "Visit date must be in the future")
     private LocalDate visitDate;
 
+    @Size(max = 50, message = "Passport cannot exceed 50 characters")
+    private String passport;
+
     @NotNull(message = "Tickets are required")
     @Size(min = 4, max = 4, message = "Must select exactly 4 tickets")
     @Valid

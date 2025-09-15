@@ -33,6 +33,22 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusinessException(BusinessException ex) {
+        log.warn("Business exception: {}", ex.getMessage());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+            problemDetail.setProperty("details", ex.getArgs()[0]);
+        }
+
+        return problemDetail;
+    }
+
     @ExceptionHandler(BusinessRuleViolationException.class)
     public ProblemDetail handleBusinessRuleViolation(BusinessRuleViolationException ex) {
         log.warn("Business rule violation: {}", ex.getMessage());

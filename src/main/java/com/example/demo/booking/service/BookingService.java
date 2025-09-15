@@ -7,6 +7,10 @@ import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.BookingStatus;
 import com.example.demo.booking.mapper.BookingMapper;
 import com.example.demo.booking.repository.BookingRepository;
+import com.example.demo.common.exception.BusinessRuleCode;
+import com.example.demo.common.exception.BusinessRuleViolationException;
+import com.example.demo.common.exception.EntityNotFoundException;
+import com.example.demo.common.exception.ExternalServiceException;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -39,17 +43,26 @@ public class BookingService {
     public BookingResponseDto createBooking(CreateBookingDto createBookingDto) {
         // Validate order exists
         OrderEntity order = orderRepository.findById(createBookingDto.getOrderId())
-                .orElseThrow(() -> new RuntimeException("Order not found with id: " + createBookingDto.getOrderId()));
+                .orElseThrow(() -> new EntityNotFoundException("Order", createBookingDto.getOrderId()));
 
         // Check if booking already exists for this order
         if (bookingRepository.existsByOrderId(createBookingDto.getOrderId())) {
-            throw new RuntimeException("Booking already exists for order: " + createBookingDto.getOrderId());
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.BOOKING_ALREADY_EXISTS,
+                "Booking already exists for order: " + createBookingDto.getOrderId());
         }
 
         // Validate visit date is at least tomorrow
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         if (createBookingDto.getVisitDate().isBefore(tomorrow)) {
-            throw new RuntimeException("Visit date must be at least tomorrow. Cannot book for today or past dates.");
+            throw new BusinessRuleViolationException(BusinessRuleCode.INVALID_VISIT_DATE);
+        }
+
+        // Check if user already has a booking for the same date
+        if (bookingRepository.existsByUserIdAndVisitDate(order.getUser().getId(), createBookingDto.getVisitDate())) {
+            throw new BusinessRuleViolationException(
+                BusinessRuleCode.ONE_BOOKING_PER_USER_PER_DAY,
+                "User already has a booking for this date: " + createBookingDto.getVisitDate());
         }
 
         // Create booking entity
@@ -57,6 +70,7 @@ public class BookingService {
         booking.setOrder(order);
         booking.setUser(order.getUser());
         booking.setVisitDate(createBookingDto.getVisitDate());
+        booking.setPassport(createBookingDto.getPassport());
         booking.setBookingStatus(BookingStatus.PENDING);
 
         // Save booking first
@@ -81,7 +95,7 @@ public class BookingService {
     public BookingResponseDto getBooking(Long bookingId) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new RuntimeException("Booking not found with id: " + bookingId);
+            throw new EntityNotFoundException("Booking", bookingId);
         }
         return bookingMapper.toResponseDto(booking);
     }
@@ -95,18 +109,18 @@ public class BookingService {
     public BookingResponseDto updateBooking(Long bookingId, UpdateBookingDto updateBookingDto) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new RuntimeException("Booking not found with id: " + bookingId);
+            throw new EntityNotFoundException("Booking", bookingId);
         }
 
         // Validate new visit date is at least tomorrow
         LocalDate tomorrow = LocalDate.now().plusDays(1);
         if (updateBookingDto.getVisitDate().isBefore(tomorrow)) {
-            throw new RuntimeException("Visit date must be at least tomorrow. Cannot book for today or past dates.");
+            throw new BusinessRuleViolationException(BusinessRuleCode.INVALID_VISIT_DATE);
         }
 
         // Check if the visit date is in the past (cannot update past bookings)
         if (booking.getVisitDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Cannot update booking for past dates");
+            throw new BusinessRuleViolationException(BusinessRuleCode.CANNOT_UPDATE_PAST_BOOKING);
         }
 
         LocalDate oldDate = booking.getVisitDate();
@@ -136,12 +150,12 @@ public class BookingService {
     public void cancelBooking(Long bookingId) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new RuntimeException("Booking not found with id: " + bookingId);
+            throw new EntityNotFoundException("Booking", bookingId);
         }
 
         // Check if the visit date is in the past (cannot cancel past bookings)
         if (booking.getVisitDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Cannot cancel booking for past dates");
+            throw new BusinessRuleViolationException(BusinessRuleCode.CANNOT_CANCEL_PAST_BOOKING);
         }
 
         // Call external booking API to cancel
@@ -154,7 +168,9 @@ public class BookingService {
             log.info("Booking cancelled for order {} on date {}",
                     booking.getOrder().getId(), booking.getVisitDate());
         } else {
-            throw new RuntimeException("Failed to cancel booking through external system");
+            throw new ExternalServiceException(
+                "EXTERNAL_BOOKING_SERVICE",
+                "Failed to cancel booking through external system");
         }
     }
 }
