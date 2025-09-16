@@ -1,0 +1,86 @@
+# Production Configuration
+# Use with: --spring.profiles.active=prod
+
+# Database configuration - use environment variables for security
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/demo_prod}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  security:
+    require-ssl: true
+
+  # JPA/Hibernate configuration for production
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Never auto-create/update schema in production
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+# PayPal configuration - use environment variables for security
+paypal:
+  client-id: ${PAYPAL_CLIENT_ID}
+  client-secret: ${PAYPAL_CLIENT_SECRET}
+  mode: live  # Production mode
+  base-url: https://api.paypal.com
+  return-url: ${PAYPAL_RETURN_URL:https://yourdomain.com/api/payments/paypal/success}
+  cancel-url: ${PAYPAL_CANCEL_URL:https://yourdomain.com/api/payments/paypal/cancel}
+
+# API Documentation - disabled in production for security
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Logging configuration for production
+logging:
+  level:
+    root: WARN
+    com.example.demo: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    com.paypal: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/demo-app.log
+    max-size: 100MB
+    max-history: 30
+
+# Server configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+
+# Management endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

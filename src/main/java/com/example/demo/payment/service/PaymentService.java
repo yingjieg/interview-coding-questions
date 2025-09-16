@@ -75,7 +75,7 @@ public class PaymentService {
 
             PayPalPaymentResponse paypalResponse = payPalService.createPayment(paymentRequest);
 
-            payment.markPayPalCreated(paypalResponse.getOrderId(), payment.getAmount());
+            payment.markPayPalCreated(paypalResponse.getOrderId(), payment.getAmount(), paypalResponse.getApprovalUrl());
             PaymentEntity updatedPayment = paymentRepository.save(payment);
 
             log.info("PayPal payment created with order ID: {}", paypalResponse.getOrderId());

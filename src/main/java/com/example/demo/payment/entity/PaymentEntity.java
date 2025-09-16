@@ -48,6 +48,9 @@ public class PaymentEntity {
     @Column(name = "paypal_payer_id", length = 50)
     private String paypalPayerId;
 
+    @Column(name = "paypal_approval_url", columnDefinition = "TEXT")
+    private String paypalApprovalUrl;
+
     // Generic payment fields for other providers
     @Column(name = "external_transaction_id", length = 100)
     private String externalTransactionId;
@@ -83,9 +86,10 @@ public class PaymentEntity {
     }
 
     // Helper methods for PayPal payments
-    public void markPayPalCreated(String paypalOrderId, BigDecimal amount) {
+    public void markPayPalCreated(String paypalOrderId, BigDecimal amount, String approvalUrl) {
         this.paypalOrderId = paypalOrderId;
         this.amount = amount;
+        this.paypalApprovalUrl = approvalUrl;
         this.paymentStatus = PaymentStatus.PAYMENT_CREATED;
         this.paymentType = PaymentType.PAYPAL;
         // PayPal payments typically expire in 3 hours

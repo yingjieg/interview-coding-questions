@@ -14,16 +14,29 @@ paypal:
   return-url: http://localhost:8888/api/payments/paypal/success
   cancel-url: http://localhost:8888/api/payments/paypal/cancel
 
-# Override any other local-specific settings here if needed
+# Database configuration for local development
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/demo
+    username: postgres
+    password: mypassword
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate configuration for local development
   jpa:
-    show-sql: true  # Show SQL queries in local development
     hibernate:
       ddl-auto: create-drop  # Recreate schema on each restart for testing
+    show-sql: true  # Show SQL queries in local development
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
 
+# API Documentation - enabled for local development only
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true

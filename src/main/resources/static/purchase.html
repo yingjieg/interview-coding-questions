@@ -290,7 +290,7 @@
 
                                     <div style="margin-top: 20px;">
                                         <p><strong>Next Step:</strong> Complete your payment through PayPal</p>
-                                        <button onclick="redirectToPayPal('${json.payment.paypalOrderId}')"
+                                        <button onclick="redirectToPayPal('${json.payment.paypalApprovalUrl}')"
                                                 style="background: #0070ba; font-size: 16px; padding: 12px 24px;">
                                             Pay with PayPal
                                         </button>
@@ -345,13 +345,15 @@
             }
         }
 
-        function redirectToPayPal(paypalOrderId) {
-            // In a real implementation, you would get the approval URL from the PayPal response
-            // For now, this is a placeholder showing how the redirect would work
-            alert(`Ready to redirect to PayPal for order: ${paypalOrderId}\n\nIn a real implementation, this would redirect to the PayPal approval URL.`);
+        function redirectToPayPal(approvalUrl) {
+            if (!approvalUrl) {
+                alert('Error: No PayPal approval URL available');
+                return;
+            }
 
-            // Example of what the real implementation might look like:
-            // window.location.href = `https://www.sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
+            // Redirect to PayPal for payment approval
+            console.log('Redirecting to PayPal approval URL:', approvalUrl);
+            window.location.href = approvalUrl;
         }
 
         // Handle HTMX responses

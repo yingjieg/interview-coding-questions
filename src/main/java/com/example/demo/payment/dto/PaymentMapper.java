@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 public interface PaymentMapper {
 
     @Mapping(source = "order.id", target = "orderId")
-    @Mapping(target = "paypalApprovalUrl", ignore = true)
+    @Mapping(source = "paypalApprovalUrl", target = "paypalApprovalUrl")
     @Mapping(expression = "java(payment.isExpired())", target = "expired")
     PaymentResponseDto toDto(PaymentEntity payment);
 }
