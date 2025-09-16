@@ -21,6 +21,13 @@ spring:
     hibernate:
       ddl-auto: create-drop  # Recreate schema on each restart for testing
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
 logging:
   level:
     com.example.demo: DEBUG
