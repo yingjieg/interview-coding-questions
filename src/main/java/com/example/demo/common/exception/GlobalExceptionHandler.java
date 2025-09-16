@@ -1,5 +1,7 @@
 package com.example.demo.common.exception;
 
+import com.example.demo.payment.exception.PayPalConfigurationException;
+import com.example.demo.payment.exception.PayPalPaymentException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -14,9 +16,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ProblemDetail handleEntityNotFound(EntityNotFoundException ex) {
-        log.warn("Entity not found: {}", ex.getMessage());
+    @ExceptionHandler(RecordNotFoundException.class)
+    public ProblemDetail handleRecordNotFound(RecordNotFoundException ex) {
+        log.warn("Database record not found: {}", ex.getMessage());
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.NOT_FOUND, ex.getMessage());
@@ -24,9 +26,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("timestamp", Instant.now());
 
         if (ex.getArgs() != null && ex.getArgs().length > 0) {
-            problemDetail.setProperty("entityType", ex.getArgs()[0]);
+            problemDetail.setProperty("recordType", ex.getArgs()[0]);
             if (ex.getArgs().length > 1) {
-                problemDetail.setProperty("entityId", ex.getArgs()[1]);
+                problemDetail.setProperty("recordId", ex.getArgs()[1]);
             }
         }
 
@@ -112,6 +114,44 @@ public class GlobalExceptionHandler {
                     error -> error.getDefaultMessage(),
                     (existing, replacement) -> existing
                 )));
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(PayPalPaymentException.class)
+    public ProblemDetail handlePayPalPaymentException(PayPalPaymentException ex) {
+        log.error("PayPal payment error: {}", ex.getMessage(), ex);
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+            problemDetail.setProperty("operation", ex.getArgs()[0]);
+            if (ex.getArgs().length > 1) {
+                problemDetail.setProperty("orderId", ex.getArgs()[1]);
+            }
+        }
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(PayPalConfigurationException.class)
+    public ProblemDetail handlePayPalConfigurationException(PayPalConfigurationException ex) {
+        log.error("PayPal configuration error: {}", ex.getMessage(), ex);
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.INTERNAL_SERVER_ERROR, "PayPal payment system is not properly configured");
+        problemDetail.setProperty("errorCode", ex.getErrorCode());
+        problemDetail.setProperty("timestamp", Instant.now());
+
+        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+            problemDetail.setProperty("configField", ex.getArgs()[0]);
+            if (ex.getArgs().length > 1) {
+                problemDetail.setProperty("issue", ex.getArgs()[1]);
+            }
+        }
 
         return problemDetail;
     }

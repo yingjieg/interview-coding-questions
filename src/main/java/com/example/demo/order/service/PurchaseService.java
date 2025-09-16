@@ -7,10 +7,15 @@ import com.example.demo.booking.dto.BookingResponseDto;
 import com.example.demo.booking.dto.CreateBookingDto;
 import com.example.demo.common.exception.BusinessException;
 import com.example.demo.common.exception.BusinessRuleViolationException;
-import com.example.demo.common.exception.EntityNotFoundException;
+import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.common.exception.IdempotencyException;
 import com.example.demo.idempotency.IdempotencyService;
 import com.example.demo.order.dto.*;
+import com.example.demo.order.entity.OrderEntity;
+import com.example.demo.order.repository.OrderRepository;
+import com.example.demo.payment.entity.PaymentEntity;
+import com.example.demo.payment.service.PaymentService;
+import com.example.demo.payment.dto.PaymentMapper;
 import com.example.demo.user.UserEntity;
 import com.example.demo.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -27,24 +32,33 @@ public class PurchaseService {
     private final IdempotencyService idempotencyService;
     private final UserRepository userRepository;
     private final TicketSubmissionOrchestrator ticketSubmissionOrchestrator;
+    private final PaymentService paymentService;
+    private final OrderRepository orderRepository;
+    private final PaymentMapper paymentMapper;
 
     public PurchaseService(OrderService orderService,
                           BookingService bookingService,
                           IdempotencyService idempotencyService,
                           UserRepository userRepository,
-                          TicketSubmissionOrchestrator ticketSubmissionOrchestrator) {
+                          TicketSubmissionOrchestrator ticketSubmissionOrchestrator,
+                          PaymentService paymentService,
+                          OrderRepository orderRepository,
+                          PaymentMapper paymentMapper) {
         this.orderService = orderService;
         this.bookingService = bookingService;
         this.idempotencyService = idempotencyService;
         this.userRepository = userRepository;
         this.ticketSubmissionOrchestrator = ticketSubmissionOrchestrator;
+        this.paymentService = paymentService;
+        this.orderRepository = orderRepository;
+        this.paymentMapper = paymentMapper;
     }
 
     public PurchaseResponseDto purchaseAndBook(String idempotencyKey, CreatePurchaseDto createPurchaseDto)
             throws BusinessException {
         // Get user for idempotency tracking
         UserEntity user = userRepository.findById(createPurchaseDto.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", createPurchaseDto.getUserId()));
+                .orElseThrow(() -> new RecordNotFoundException("User", createPurchaseDto.getUserId()));
 
         // Execute with idempotency protection
         try {
@@ -80,6 +94,12 @@ public class PurchaseService {
             // Create order
             OrderResponseDto order = createOrder(createPurchaseDto);
 
+            // Create payment for the order
+            PaymentEntity payment = createPayment(order);
+
+            // Process PayPal payment
+            PaymentEntity processedPayment = processPayment(payment, createPurchaseDto);
+
             // Create booking if visit date provided
             BookingResponseDto booking = createBookingIfRequired(createPurchaseDto, order);
 
@@ -88,9 +108,9 @@ public class PurchaseService {
                 booking, createPurchaseDto, order.getId());
 
             // Build response
-            PurchaseResponseDto response = buildResponse(order, booking, ticketResult);
+            PurchaseResponseDto response = buildResponse(order, booking, ticketResult, processedPayment);
 
-            logSuccess(order, booking);
+            logSuccess(order, booking, processedPayment);
             return response;
 
         } catch (BusinessRuleViolationException e) {
@@ -114,6 +134,27 @@ public class PurchaseService {
         return order;
     }
 
+    private PaymentEntity createPayment(OrderResponseDto orderDto) {
+        // Get the full order entity to create payment
+        OrderEntity order = orderRepository.findById(orderDto.getId())
+                .orElseThrow(() -> new RecordNotFoundException("Order", orderDto.getId()));
+
+        PaymentEntity payment = paymentService.createPayPalPayment(order, orderDto.getTotalAmount());
+        log.info("Payment created: {} for order: {}", payment.getId(), order.getId());
+        return payment;
+    }
+
+    private PaymentEntity processPayment(PaymentEntity payment, CreatePurchaseDto createPurchaseDto) {
+        // Build PayPal URLs - in real implementation, these would come from configuration
+        String returnUrl = "http://localhost:8888/api/payments/paypal/success";
+        String cancelUrl = "http://localhost:8888/api/payments/paypal/cancel";
+
+        PaymentEntity processedPayment = paymentService.processPayPalPayment(payment, returnUrl, cancelUrl);
+        log.info("PayPal payment processed: {} with PayPal order ID: {}",
+                processedPayment.getId(), processedPayment.getPaypalOrderId());
+        return processedPayment;
+    }
+
     private BookingResponseDto createBookingIfRequired(CreatePurchaseDto createPurchaseDto, OrderResponseDto order) {
         if (createPurchaseDto.getVisitDate() == null) {
             log.info("No visit date provided - purchase only for order {}", order.getId());
@@ -131,24 +172,26 @@ public class PurchaseService {
         return booking;
     }
 
-    private PurchaseResponseDto buildResponse(OrderResponseDto order, BookingResponseDto booking, TicketSubmissionResult ticketResult) {
+    private PurchaseResponseDto buildResponse(OrderResponseDto order, BookingResponseDto booking, TicketSubmissionResult ticketResult, PaymentEntity payment) {
         String message = booking == null ?
-            "Purchase completed successfully. You can book a visit date separately if needed." :
-            ticketResult.message();
+            "Purchase initiated successfully. Complete payment to finalize your order." :
+            "Purchase and booking initiated. Complete payment to finalize your order and booking.";
 
         PurchaseResponseDto response = new PurchaseResponseDto();
         response.setOrder(order);
         response.setBooking(booking);
+        response.setPayment(paymentMapper.toDto(payment));
         response.setMessage(message);
         return response;
     }
 
-    private void logSuccess(OrderResponseDto order, BookingResponseDto booking) {
+    private void logSuccess(OrderResponseDto order, BookingResponseDto booking, PaymentEntity payment) {
         if (booking != null) {
-            log.info("Purchase and booking completed for order {} with booking {}",
-                order.getId(), booking.getId());
+            log.info("Purchase and booking initiated for order {} with booking {} and payment {}",
+                order.getId(), booking.getId(), payment.getId());
         } else {
-            log.info("Purchase-only completed for order {}", order.getId());
+            log.info("Purchase-only initiated for order {} with payment {}",
+                order.getId(), payment.getId());
         }
     }
 }

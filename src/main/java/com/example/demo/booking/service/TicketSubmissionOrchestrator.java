@@ -4,7 +4,7 @@ import com.example.demo.booking.dto.BookingResponseDto;
 import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.TicketSubmissionStatus;
 import com.example.demo.booking.repository.BookingRepository;
-import com.example.demo.common.exception.EntityNotFoundException;
+import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.dto.CreatePurchaseDto;
 import com.example.demo.order.dto.TicketDto;
 import lombok.RequiredArgsConstructor;
@@ -92,7 +92,7 @@ public class TicketSubmissionOrchestrator {
         try {
             Long bookingId = booking.getId();
             BookingEntity bookingEntity = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Booking", bookingId));
+                .orElseThrow(() -> new RecordNotFoundException("Booking", bookingId));
 
             TicketSubmissionStatus status = success ?
                 TicketSubmissionStatus.SUBMITTED :

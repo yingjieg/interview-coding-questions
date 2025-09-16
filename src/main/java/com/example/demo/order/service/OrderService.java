@@ -2,7 +2,7 @@ package com.example.demo.order.service;
 
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
-import com.example.demo.common.exception.EntityNotFoundException;
+import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.dto.CreateOrderDto;
 import com.example.demo.order.dto.OrderResponseDto;
 import com.example.demo.order.entity.OrderEntity;
@@ -36,7 +36,7 @@ public class OrderService {
     public OrderResponseDto createOrder(CreateOrderDto createOrderDto) {
         // Validate user exists
         UserEntity user = userRepository.findById(createOrderDto.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("User", createOrderDto.getUserId()));
+                .orElseThrow(() -> new RecordNotFoundException("User", createOrderDto.getUserId()));
 
         // Validate exactly 4 tickets - double check even though DTO validation should catch this
         if (createOrderDto.getTickets() == null || createOrderDto.getTickets().size() != 4) {
@@ -74,7 +74,7 @@ public class OrderService {
     public OrderResponseDto getOrder(Long orderId) {
         OrderEntity order = orderRepository.findByIdWithItems(orderId);
         if (order == null) {
-            throw new EntityNotFoundException("Order", orderId);
+            throw new RecordNotFoundException("Order", orderId);
         }
         return orderMapper.toResponseDto(order);
     }

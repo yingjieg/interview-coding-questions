@@ -1,0 +1,27 @@
+# Template for Local Development Configuration
+# Copy this file to application-local.yml and fill in your PayPal credentials
+# Use with: --spring.profiles.active=local
+
+# PayPal Configuration (Sandbox for Testing)
+# 1. Go to https://developer.paypal.com/
+# 2. Create a sandbox application
+# 3. Copy your Client ID and Client Secret below
+paypal:
+  client-id: YOUR_SANDBOX_CLIENT_ID_HERE
+  client-secret: YOUR_SANDBOX_CLIENT_SECRET_HERE
+  mode: sandbox  # Use 'live' for production
+  base-url: https://api.sandbox.paypal.com
+  return-url: http://localhost:8888/api/payments/paypal/success
+  cancel-url: http://localhost:8888/api/payments/paypal/cancel
+
+# Override any other local-specific settings here if needed
+spring:
+  jpa:
+    show-sql: true  # Show SQL queries in local development
+    hibernate:
+      ddl-auto: create-drop  # Recreate schema on each restart for testing
+
+logging:
+  level:
+    com.example.demo: DEBUG
+    com.paypal: DEBUG

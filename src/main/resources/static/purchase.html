@@ -277,7 +277,33 @@
                         target.className = 'response success';
                         try {
                             const json = JSON.parse(text);
-                            target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
+
+                            // Check if payment information is present
+                            if (json.payment && json.payment.paypalOrderId) {
+                                target.innerHTML = `
+                                    <h3>Purchase Initiated Successfully!</h3>
+                                    <p><strong>Order ID:</strong> ${json.order.id}</p>
+                                    <p><strong>Total Amount:</strong> $${json.order.totalAmount}</p>
+                                    ${json.booking ? `<p><strong>Booking ID:</strong> ${json.booking.id}</p>` : ''}
+                                    <p><strong>Payment Status:</strong> ${json.payment.paymentStatus}</p>
+                                    <p><strong>PayPal Order ID:</strong> ${json.payment.paypalOrderId}</p>
+
+                                    <div style="margin-top: 20px;">
+                                        <p><strong>Next Step:</strong> Complete your payment through PayPal</p>
+                                        <button onclick="redirectToPayPal('${json.payment.paypalOrderId}')"
+                                                style="background: #0070ba; font-size: 16px; padding: 12px 24px;">
+                                            Pay with PayPal
+                                        </button>
+                                    </div>
+
+                                    <details style="margin-top: 20px;">
+                                        <summary>Full Response Details</summary>
+                                        <pre>${JSON.stringify(json, null, 2)}</pre>
+                                    </details>
+                                `;
+                            } else {
+                                target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
+                            }
                         } catch (e) {
                             target.textContent = 'Success: ' + text;
                         }
@@ -317,6 +343,15 @@
                 documentTypeInput.value = '';
                 documentNumberInput.value = '';
             }
+        }
+
+        function redirectToPayPal(paypalOrderId) {
+            // In a real implementation, you would get the approval URL from the PayPal response
+            // For now, this is a placeholder showing how the redirect would work
+            alert(`Ready to redirect to PayPal for order: ${paypalOrderId}\n\nIn a real implementation, this would redirect to the PayPal approval URL.`);
+
+            // Example of what the real implementation might look like:
+            // window.location.href = `https://www.sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
         }
 
         // Handle HTMX responses

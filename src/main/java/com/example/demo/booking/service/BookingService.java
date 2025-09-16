@@ -10,7 +10,7 @@ import com.example.demo.booking.mapper.BookingMapper;
 import com.example.demo.booking.repository.BookingRepository;
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
-import com.example.demo.common.exception.EntityNotFoundException;
+import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.common.exception.ExternalServiceException;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.repository.OrderRepository;
@@ -45,7 +45,7 @@ public class BookingService {
     public BookingResponseDto createBooking(CreateBookingDto createBookingDto) {
         // Validate order exists
         OrderEntity order = orderRepository.findById(createBookingDto.getOrderId())
-                .orElseThrow(() -> new EntityNotFoundException("Order", createBookingDto.getOrderId()));
+                .orElseThrow(() -> new RecordNotFoundException("Order", createBookingDto.getOrderId()));
 
         // Check if booking already exists for this order
         if (bookingRepository.existsByOrderId(createBookingDto.getOrderId())) {
@@ -98,7 +98,7 @@ public class BookingService {
     public BookingResponseDto getBooking(Long bookingId) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new EntityNotFoundException("Booking", bookingId);
+            throw new RecordNotFoundException("Booking", bookingId);
         }
         return bookingMapper.toResponseDto(booking);
     }
@@ -112,7 +112,7 @@ public class BookingService {
     public BookingResponseDto updateBooking(Long bookingId, UpdateBookingDto updateBookingDto) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new EntityNotFoundException("Booking", bookingId);
+            throw new RecordNotFoundException("Booking", bookingId);
         }
 
         // Validate new visit date is at least tomorrow
@@ -153,7 +153,7 @@ public class BookingService {
     public void cancelBooking(Long bookingId) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new EntityNotFoundException("Booking", bookingId);
+            throw new RecordNotFoundException("Booking", bookingId);
         }
 
         // Check if the visit date is in the past (cannot cancel past bookings)
@@ -181,7 +181,7 @@ public class BookingService {
     public BookingResponseDto submitTickets(Long bookingId) {
         BookingEntity booking = bookingRepository.findByIdWithDetails(bookingId);
         if (booking == null) {
-            throw new EntityNotFoundException("Booking", bookingId);
+            throw new RecordNotFoundException("Booking", bookingId);
         }
 
         // Check if booking is confirmed
