@@ -69,7 +69,7 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/paypal/success")
+    @GetMapping("/paypal/success")
     @Operation(summary = "Handle PayPal payment success callback")
     @ApiResponse(responseCode = "200", description = "Payment approved successfully")
     public ResponseEntity<PaymentResponseDto> handlePayPalSuccess(
@@ -93,7 +93,7 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/paypal/cancel")
+    @GetMapping("/paypal/cancel")
     @Operation(summary = "Handle PayPal payment cancellation")
     @ApiResponse(responseCode = "200", description = "Payment cancelled successfully")
     public ResponseEntity<String> handlePayPalCancel(
