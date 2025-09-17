@@ -1,0 +1,174 @@
+# Spring Boot 3.4+ Production Configuration Template 2025
+# Based on industry best practices and official Spring Boot documentation
+# Copy this file to application-prod.yml and configure environment variables
+
+server:
+  port: ${SERVER_PORT:8888}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/}
+  compression:
+    enabled: ${SERVER_COMPRESSION_ENABLED:true}
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:ticket-booking-system}
+
+  # Database Configuration with HikariCP (Production-optimized)
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/demo}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Connection pool settings (production-optimized)
+      pool-name: ${HIKARI_POOL_NAME:BookingHikariCP}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:20000}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:20}
+      minimum-idle: ${HIKARI_MIN_IDLE:10}
+      validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
+      connection-test-query: SELECT 1
+      leak-detection-threshold: ${HIKARI_LEAK_DETECTION:60000}
+
+  # JPA Configuration (Production-safe)
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: ${SPRING_JPA_FORMAT_SQL:false}
+        jdbc:
+          time_zone: UTC
+          batch_size: ${HIBERNATE_BATCH_SIZE:20}
+          fetch_size: ${HIBERNATE_FETCH_SIZE:50}
+        connection:
+          provider_disables_autocommit: true
+        query:
+          plan_cache_max_size: ${HIBERNATE_QUERY_CACHE_SIZE:2048}
+          in_clause_parameter_padding: true
+        generate_statistics: ${SPRING_JPA_GENERATE_STATISTICS:false}
+        cache:
+          use_second_level_cache: ${HIBERNATE_SECOND_LEVEL_CACHE:false}
+          use_query_cache: ${HIBERNATE_QUERY_CACHE:false}
+    open-in-view: false
+
+  # Security Configuration
+  security:
+    user:
+      name: ${SPRING_SECURITY_USER_NAME:admin}
+      password: ${SPRING_SECURITY_USER_PASSWORD:}
+      roles: ${SPRING_SECURITY_USER_ROLES:ADMIN}
+
+  # Jackson Configuration
+  jackson:
+    time-zone: ${SPRING_JACKSON_TIME_ZONE:UTC}
+    date-format: ${SPRING_JACKSON_DATE_FORMAT:yyyy-MM-dd'T'HH:mm:ss.SSSZ}
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  # Transaction Configuration
+  transaction:
+    default-timeout: ${SPRING_TRANSACTION_TIMEOUT:300}
+    rollback-on-commit-failure: true
+
+# Management & Actuator (Production-ready)
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8889}
+  endpoints:
+    web:
+      base-path: ${MANAGEMENT_BASE_PATH:/actuator}
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS:health,info,metrics,prometheus}
+  endpoint:
+    health:
+      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS:when-authorized}
+      show-components: when-authorized
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: ${MANAGEMENT_PROMETHEUS_ENABLED:true}
+    info:
+      enabled: true
+  health:
+    defaults:
+      enabled: true
+    db:
+      enabled: true
+    diskspace:
+      enabled: true
+      threshold: ${HEALTH_DISKSPACE_THRESHOLD:10MB}
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:production}
+    export:
+      prometheus:
+        enabled: ${METRICS_PROMETHEUS_ENABLED:true}
+
+# Logging Configuration (Production-optimized)
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:WARN}
+    com.example.demo: ${LOGGING_LEVEL_APPLICATION:INFO}
+    org.springframework: ${LOGGING_LEVEL_SPRING:WARN}
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:WARN}
+    org.springframework.web: ${LOGGING_LEVEL_WEB:WARN}
+    org.hibernate: ${LOGGING_LEVEL_HIBERNATE:WARN}
+    org.hibernate.SQL: ${LOGGING_LEVEL_SQL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOGGING_LEVEL_SQL_PARAMS:WARN}
+    com.zaxxer.hikari: ${LOGGING_LEVEL_HIKARI:INFO}
+    org.postgresql: ${LOGGING_LEVEL_POSTGRES:WARN}
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} %clr([%X{traceId:-},%X{spanId:-}]){blue} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
+    file: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} [%X{traceId:-},%X{spanId:-}] %-5level ${PID:- } --- [%thread] %-40.40logger{39} : %msg%n"
+  file:
+    name: ${LOGGING_FILE_NAME:./logs/${spring.application.name}.log}
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOGGING_FILE_MAX_SIZE:50MB}
+      max-history: ${LOGGING_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOGGING_FILE_TOTAL_SIZE:1GB}
+
+# PayPal Configuration
+paypal:
+  client:
+    id: ${PAYPAL_CLIENT_ID:}
+    secret: ${PAYPAL_CLIENT_SECRET:}
+  mode: ${PAYPAL_MODE:live}
+  currency: ${PAYPAL_CURRENCY:USD}
+  timeout: ${PAYPAL_TIMEOUT:30000}
+
+# Custom Application Properties
+app:
+  name: ${spring.application.name}
+  version: ${APP_VERSION:@project.version@}
+  description: ${APP_DESCRIPTION:Ticket Booking System with PayPal Integration}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://yourdomain.com}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+    max-age: ${CORS_MAX_AGE:3600}

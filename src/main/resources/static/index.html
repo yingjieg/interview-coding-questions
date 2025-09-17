@@ -89,15 +89,28 @@
             <a href="/users">Users</a>
             <a href="/bookings">Bookings</a>
             <a href="/purchase">Purchase</a>
+            <a href="/payments">Payments</a>
         </nav>
 
         <div class="container">
             <h2>API Endpoints Overview</h2>
             <ul>
-                <li><strong>Users:</strong> Registration, login, password reset</li>
-                <li><strong>Purchase:</strong> Create orders with or without booking - handles all ticket purchasing scenarios</li>
+                <li><strong>Users:</strong> Registration (first/last name optional), login, password reset</li>
+                <li><strong>Purchase:</strong> Create orders with or without booking - handles all ticket purchasing scenarios with PayPal integration</li>
                 <li><strong>Bookings:</strong> Manage visit bookings separately (if needed after purchase)</li>
+                <li><strong>Payments:</strong> Complete payment flow with PayPal - approve, capture, cancel, and refund payments</li>
             </ul>
+
+            <div style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0;">💳 Payment Features</h3>
+                <ul>
+                    <li>✅ Create purchase with PayPal payment</li>
+                    <li>✅ User can cancel payment before approval</li>
+                    <li>✅ Admin can capture completed payments</li>
+                    <li>✅ Full refund support for completed payments</li>
+                    <li>✅ Real-time payment status tracking</li>
+                </ul>
+            </div>
         </div>
 
         <div class="container">

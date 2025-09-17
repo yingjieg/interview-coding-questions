@@ -1,11 +1,51 @@
+# Simple development configuration
 server:
   port: 8888
 
 spring:
   application:
-    name: demo
+    name: ticket-booking-system
 
+  # Database configuration - supports environment variables
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/demo}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:mypassword}
+    driver-class-name: org.postgresql.Driver
+
+  # JPA configuration - development friendly
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
+    show-sql: ${SPRING_JPA_SHOW_SQL:true}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+# Basic management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Development logging
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.example.demo: ${LOGGING_LEVEL_COM_EXAMPLE:DEBUG}
+    org.hibernate.SQL: ${LOGGING_LEVEL_SQL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOGGING_LEVEL_SQL_PARAMS:TRACE}
+
+# PayPal configuration
+paypal:
+  client:
+    id: ${PAYPAL_CLIENT_ID:your_paypal_client_id}
+    secret: ${PAYPAL_CLIENT_SECRET:your_paypal_client_secret}
+  mode: ${PAYPAL_MODE:sandbox}
+  currency: USD
 

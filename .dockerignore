@@ -1,0 +1,47 @@
+# Docker ignore file for Spring Boot project
+
+# Build directories
+build/
+target/
+.gradle/
+out/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+HELP.md
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Test results
+test-results/
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
