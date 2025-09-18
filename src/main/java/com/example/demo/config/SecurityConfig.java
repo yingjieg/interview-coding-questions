@@ -20,11 +20,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/**", "/swagger-ui/**", "/api-docs/**", "/", "/users", "/orders", "/bookings", "/purchase", "/static/**", "/*.html", "/*.css", "/*.js").permitAll()
-                .anyRequest().authenticated()
-            )
-            .csrf(csrf -> csrf.disable());
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/**", "/swagger-ui/**", "/api-docs/**", "/", "/users", "/orders", "/bookings", "/purchase", "/static/**", "/*.html", "/*.css", "/*.js").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .csrf(csrf -> csrf.disable());
 
         return http.build();
     }

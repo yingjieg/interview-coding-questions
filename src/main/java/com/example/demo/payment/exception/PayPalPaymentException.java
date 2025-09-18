@@ -18,7 +18,7 @@ public class PayPalPaymentException extends BusinessException {
 
     public PayPalPaymentException(String operation, String orderId, Throwable cause) {
         super("PAYPAL_PAYMENT_ERROR",
-              String.format("PayPal %s failed for order %s: %s", operation, orderId, cause.getMessage()),
-              cause, operation, orderId);
+                String.format("PayPal %s failed for order %s: %s", operation, orderId, cause.getMessage()),
+                cause, operation, orderId);
     }
 }

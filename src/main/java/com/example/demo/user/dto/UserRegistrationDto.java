@@ -14,7 +14,7 @@ public class UserRegistrationDto {
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 50, message = "Password must be between 8 and 50 characters")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
-             message = "Password must contain at least one lowercase letter, one uppercase letter, and one digit")
+            message = "Password must contain at least one lowercase letter, one uppercase letter, and one digit")
     private String password;
 
     @Size(max = 50, message = "First name must not exceed 50 characters")

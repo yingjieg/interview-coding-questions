@@ -161,6 +161,12 @@ paypal:
   currency: ${PAYPAL_CURRENCY:USD}
   timeout: ${PAYPAL_TIMEOUT:30000}
 
+# Stripe Configuration
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+
 # Custom Application Properties
 app:
   name: ${spring.application.name}

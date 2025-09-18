@@ -18,7 +18,7 @@ public class PayPalConfigurationException extends BusinessException {
 
     public PayPalConfigurationException(String configField, String issue) {
         super("PAYPAL_CONFIG_ERROR",
-              String.format("PayPal configuration error - %s: %s", configField, issue),
-              configField, issue);
+                String.format("PayPal configuration error - %s: %s", configField, issue),
+                configField, issue);
     }
 }

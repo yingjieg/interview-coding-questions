@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = VisitDateValidator.class)
 public @interface ValidVisitDate {
     String message() default "Visit date must be at least tomorrow";
+
     Class<?>[] groups() default {};
+
     Class<? extends Payload>[] payload() default {};
 }

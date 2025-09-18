@@ -28,31 +28,31 @@ public class VisitDateValidator implements ConstraintValidator<ValidVisitDate, C
         // Check if visit date is at least tomorrow
         if (visitDate.isBefore(tomorrow)) {
             context.buildConstraintViolationWithTemplate(
-                "Visit date must be at least tomorrow. Cannot book for today or past dates. " +
-                "Visit date provided: " + visitDate + ", minimum allowed: " + tomorrow
-            )
-            .addPropertyNode("visitDate")
-            .addConstraintViolation();
+                            "Visit date must be at least tomorrow. Cannot book for today or past dates. " +
+                                    "Visit date provided: " + visitDate + ", minimum allowed: " + tomorrow
+                    )
+                    .addPropertyNode("visitDate")
+                    .addConstraintViolation();
             isValid = false;
         }
 
         // Check if document type is provided when visit date is provided
         if (dto.getDocumentType() == null) {
             context.buildConstraintViolationWithTemplate(
-                "Document type is required when visit date is provided"
-            )
-            .addPropertyNode("documentType")
-            .addConstraintViolation();
+                            "Document type is required when visit date is provided"
+                    )
+                    .addPropertyNode("documentType")
+                    .addConstraintViolation();
             isValid = false;
         }
 
         // Check if document number is provided when visit date is provided
         if (dto.getDocumentNumber() == null || dto.getDocumentNumber().trim().isEmpty()) {
             context.buildConstraintViolationWithTemplate(
-                "Document number is required when visit date is provided"
-            )
-            .addPropertyNode("documentNumber")
-            .addConstraintViolation();
+                            "Document number is required when visit date is provided"
+                    )
+                    .addPropertyNode("documentNumber")
+                    .addConstraintViolation();
             isValid = false;
         }
 

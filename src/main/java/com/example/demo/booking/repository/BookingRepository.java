@@ -24,6 +24,6 @@ public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
     boolean existsByUserIdAndVisitDate(Long userId, LocalDate visitDate);
 
     @Query("SELECT b FROM BookingEntity b LEFT JOIN FETCH b.order LEFT JOIN FETCH b.user " +
-           "WHERE b.bookingStatus = 'CONFIRMED' AND b.ticketSubmissionStatus = 'NOT_SUBMITTED' AND b.visitDate = :visitDate")
+            "WHERE b.bookingStatus = 'CONFIRMED' AND b.ticketSubmissionStatus = 'NOT_SUBMITTED' AND b.visitDate = :visitDate")
     List<BookingEntity> findBookingsForTicketSubmission(LocalDate visitDate);
 }

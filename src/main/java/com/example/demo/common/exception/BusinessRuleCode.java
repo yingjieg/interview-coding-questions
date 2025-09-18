@@ -24,7 +24,14 @@ public enum BusinessRuleCode {
     // Ticket Submission Rules
     INVALID_BOOKING_STATUS("Cannot submit tickets for booking that is not confirmed"),
     TICKETS_ALREADY_SUBMITTED("Tickets have already been submitted for this booking"),
-    CANNOT_SUBMIT_PAST_TICKETS("Cannot submit tickets for past visit date");
+    CANNOT_SUBMIT_PAST_TICKETS("Cannot submit tickets for past visit date"),
+
+    // Payment Rules
+    PAYMENT_PROCESSING_FAILED("Payment processing failed"),
+    INVALID_PAYMENT_METHOD("Invalid payment method specified"),
+    PAYMENT_ALREADY_COMPLETED("Payment has already been completed"),
+    PAYMENT_CANCELLED("Payment was cancelled"),
+    REFUND_FAILED("Refund processing failed");
 
     private final String defaultMessage;
 

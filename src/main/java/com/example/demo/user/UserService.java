@@ -22,8 +22,8 @@ public class UserService {
     private final EmailService emailService;
 
     public UserService(UserRepository userRepository,
-                      PasswordEncoder passwordEncoder,
-                      EmailService emailService) {
+                       PasswordEncoder passwordEncoder,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;

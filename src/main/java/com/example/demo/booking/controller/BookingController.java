@@ -53,7 +53,7 @@ public class BookingController {
     @ApiResponse(responseCode = "200", description = "Booking updated successfully")
     @ApiResponse(responseCode = "400", description = "Invalid date or booking cannot be updated")
     public ResponseEntity<BookingResponseDto> updateBooking(@PathVariable Long bookingId,
-                                                           @Valid @RequestBody UpdateBookingDto updateBookingDto) {
+                                                            @Valid @RequestBody UpdateBookingDto updateBookingDto) {
         BookingResponseDto booking = bookingService.updateBooking(bookingId, updateBookingDto);
         return ResponseEntity.ok(booking);
     }

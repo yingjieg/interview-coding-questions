@@ -51,6 +51,19 @@ public class PaymentEntity {
     @Column(name = "paypal_approval_url", columnDefinition = "TEXT")
     private String paypalApprovalUrl;
 
+    // Stripe specific fields
+    @Column(name = "stripe_payment_intent_id", length = 100)
+    private String stripePaymentIntentId;
+
+    @Column(name = "stripe_client_secret", length = 200)
+    private String stripeClientSecret;
+
+    @Column(name = "stripe_payment_method_id", length = 100)
+    private String stripePaymentMethodId;
+
+    @Column(name = "stripe_charge_id", length = 100)
+    private String stripeChargeId;
+
     // Generic payment fields for other providers
     @Column(name = "external_transaction_id", length = 100)
     private String externalTransactionId;
@@ -118,6 +131,43 @@ public class PaymentEntity {
         this.failureReason = reason;
     }
 
+    // Helper methods for Stripe payments
+    public void markStripeCreated(String paymentIntentId, String clientSecret, BigDecimal amount) {
+        this.stripePaymentIntentId = paymentIntentId;
+        this.stripeClientSecret = clientSecret;
+        this.amount = amount;
+        this.paymentStatus = PaymentStatus.PAYMENT_CREATED;
+        this.paymentType = PaymentType.STRIPE;
+        this.externalTransactionId = paymentIntentId;
+        // Stripe Payment Intents don't expire automatically like PayPal, but we set a reasonable timeout
+        this.expiresAt = LocalDateTime.now().plusDays(1);
+    }
+
+    public void markStripeProcessing() {
+        this.paymentStatus = PaymentStatus.PAYMENT_APPROVED; // Use approved status for processing
+    }
+
+    public void markStripeCompleted(String chargeId, String paymentMethodId) {
+        this.stripeChargeId = chargeId;
+        this.stripePaymentMethodId = paymentMethodId;
+        this.paymentStatus = PaymentStatus.PAYMENT_COMPLETED;
+        this.completedAt = LocalDateTime.now();
+        // Update external transaction ID to charge ID for completed payments
+        if (chargeId != null) {
+            this.externalTransactionId = chargeId;
+        }
+    }
+
+    public void markStripeFailed(String reason) {
+        this.paymentStatus = PaymentStatus.PAYMENT_FAILED;
+        this.failureReason = reason;
+    }
+
+    public void markStripeCancelled() {
+        this.paymentStatus = PaymentStatus.PAYMENT_CANCELLED;
+        this.failureReason = "Payment cancelled by user or system";
+    }
+
     public boolean isExpired() {
         return expiresAt != null && expiresAt.isBefore(LocalDateTime.now());
     }
@@ -128,7 +178,7 @@ public class PaymentEntity {
 
     public boolean canBeRetried() {
         return PaymentStatus.PAYMENT_FAILED.equals(paymentStatus) ||
-               PaymentStatus.PAYMENT_CANCELLED.equals(paymentStatus) ||
-               isExpired();
+                PaymentStatus.PAYMENT_CANCELLED.equals(paymentStatus) ||
+                isExpired();
     }
 }

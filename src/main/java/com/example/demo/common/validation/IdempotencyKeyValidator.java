@@ -17,15 +17,15 @@ public class IdempotencyKeyValidator implements ConstraintValidator<ValidIdempot
         if (value == null || value.trim().isEmpty()) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Idempotency key is required")
-                .addConstraintViolation();
+                    .addConstraintViolation();
             return false;
         }
 
         if (!value.matches(VALID_PATTERN)) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate(
-                "Idempotency key must be 10-50 characters containing only letters, numbers, hyphens, and underscores. " +
-                "Provided key length: " + value.length()
+                    "Idempotency key must be 10-50 characters containing only letters, numbers, hyphens, and underscores. " +
+                            "Provided key length: " + value.length()
             ).addConstraintViolation();
             return false;
         }

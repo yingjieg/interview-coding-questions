@@ -4,6 +4,7 @@ import com.example.demo.booking.entity.BookingStatus;
 import com.example.demo.booking.entity.DocumentType;
 import com.example.demo.booking.entity.TicketSubmissionStatus;
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 

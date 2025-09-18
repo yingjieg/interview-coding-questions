@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
         log.warn("Database record not found: {}", ex.getMessage());
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.NOT_FOUND, ex.getMessage());
+                HttpStatus.NOT_FOUND, ex.getMessage());
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         log.warn("Business exception: {}", ex.getMessage());
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, ex.getMessage());
+                HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         log.warn("Business rule violation: {}", ex.getMessage());
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, ex.getMessage());
+                HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
         log.warn("Idempotency error: {}", ex.getMessage());
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.CONFLICT, ex.getMessage());
+                HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
         log.error("External service error: {}", ex.getMessage(), ex);
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_GATEWAY, "External service temporarily unavailable");
+                HttpStatus.BAD_GATEWAY, "External service temporarily unavailable");
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -100,20 +100,20 @@ public class GlobalExceptionHandler {
         log.warn("Validation error: {}", ex.getMessage());
 
         String errors = ex.getBindingResult().getFieldErrors().stream()
-            .map(error -> String.format("%s: %s", error.getField(), error.getDefaultMessage()))
-            .collect(Collectors.joining(", "));
+                .map(error -> String.format("%s: %s", error.getField(), error.getDefaultMessage()))
+                .collect(Collectors.joining(", "));
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, "Validation failed: " + errors);
+                HttpStatus.BAD_REQUEST, "Validation failed: " + errors);
         problemDetail.setProperty("errorCode", "VALIDATION_ERROR");
         problemDetail.setProperty("timestamp", Instant.now());
         problemDetail.setProperty("validationErrors",
-            ex.getBindingResult().getFieldErrors().stream()
-                .collect(Collectors.toMap(
-                    error -> error.getField(),
-                    error -> error.getDefaultMessage(),
-                    (existing, replacement) -> existing
-                )));
+                ex.getBindingResult().getFieldErrors().stream()
+                        .collect(Collectors.toMap(
+                                error -> error.getField(),
+                                error -> error.getDefaultMessage(),
+                                (existing, replacement) -> existing
+                        )));
 
         return problemDetail;
     }
@@ -123,7 +123,7 @@ public class GlobalExceptionHandler {
         log.error("PayPal payment error: {}", ex.getMessage(), ex);
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, ex.getMessage());
+                HttpStatus.BAD_REQUEST, ex.getMessage());
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -142,7 +142,7 @@ public class GlobalExceptionHandler {
         log.error("PayPal configuration error: {}", ex.getMessage(), ex);
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.INTERNAL_SERVER_ERROR, "PayPal payment system is not properly configured");
+                HttpStatus.INTERNAL_SERVER_ERROR, "PayPal payment system is not properly configured");
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
@@ -161,7 +161,7 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
 
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-            HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+                HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
         problemDetail.setProperty("errorCode", "INTERNAL_ERROR");
         problemDetail.setProperty("timestamp", Instant.now());
 

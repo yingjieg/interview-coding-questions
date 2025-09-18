@@ -1,169 +1,40 @@
 package com.example.demo.payment.service;
 
-import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.entity.OrderEntity;
-import com.example.demo.payment.dto.PayPalCaptureResponse;
-import com.example.demo.payment.dto.PayPalPaymentRequest;
-import com.example.demo.payment.dto.PayPalPaymentResponse;
 import com.example.demo.payment.entity.PaymentEntity;
-import com.example.demo.payment.entity.PaymentStatus;
-import com.example.demo.payment.entity.PaymentType;
-import com.example.demo.payment.repository.PaymentRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
-@Service
-@Slf4j
-@RequiredArgsConstructor
-@Transactional
-public class PaymentService {
+public interface PaymentService {
 
-    private final PaymentRepository paymentRepository;
-    private final PayPalService payPalService;
+    // Basic CRUD operations
+    PaymentEntity getPaymentById(Long id);
 
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Payment", id));
-    }
+    PaymentEntity getPaymentByOrderId(Long orderId);
 
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentByOrderId(Long orderId) {
-        return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RecordNotFoundException("Payment for order", orderId));
-    }
+    List<PaymentEntity> getUserPayments(Long userId);
 
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getUserPayments(Long userId) {
-        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
+    PaymentEntity savePayment(PaymentEntity payment);
 
-    public PaymentEntity createPayPalPayment(OrderEntity order, BigDecimal amount) {
-        log.info("Creating PayPal payment for order {} with amount {}", order.getId(), amount);
+    // Payment creation methods
+    PaymentEntity createPayPalPayment(OrderEntity order, BigDecimal amount);
 
-        PaymentEntity payment = new PaymentEntity();
-        payment.setOrder(order);
-        payment.setPaymentType(PaymentType.PAYPAL);
-        payment.setAmount(amount);
-        payment.setCurrency("USD");
-        payment.setPaymentStatus(PaymentStatus.PENDING);
+    PaymentEntity createStripePayment(OrderEntity order, BigDecimal amount);
 
-        PaymentEntity savedPayment = paymentRepository.save(payment);
-        log.info("Created payment with ID: {}", savedPayment.getId());
+    // Payment processing
+    PaymentEntity processPayPalPayment(PaymentEntity payment, String returnUrl, String cancelUrl);
 
-        return savedPayment;
-    }
+    // PayPal specific methods
+    PaymentEntity approvePayPalPayment(String paypalOrderId, String payerId);
 
-    public PaymentEntity processPayPalPayment(PaymentEntity payment, String returnUrl, String cancelUrl) {
-        try {
-            log.info("Processing PayPal payment for payment ID: {}", payment.getId());
+    PaymentEntity capturePayPalPayment(String paypalOrderId);
 
-            PayPalPaymentRequest paymentRequest = PayPalPaymentRequest.builder()
-                    .amount(payment.getAmount())
-                    .currency(payment.getCurrency())
-                    .description("Ticket Order #" + payment.getOrder().getId())
-                    .referenceId(payment.getId().toString())
-                    .returnUrl(returnUrl)
-                    .cancelUrl(cancelUrl)
-                    .build();
+    // Generic payment operations
+    PaymentEntity cancelPayment(Long paymentId, String reason);
 
-            PayPalPaymentResponse paypalResponse = payPalService.createPayment(paymentRequest);
+    // Maintenance operations
+    List<PaymentEntity> getExpiredPayments();
 
-            payment.markPayPalCreated(paypalResponse.getOrderId(), payment.getAmount(), paypalResponse.getApprovalUrl());
-            PaymentEntity updatedPayment = paymentRepository.save(payment);
-
-            log.info("PayPal payment created with order ID: {}", paypalResponse.getOrderId());
-            return updatedPayment;
-
-        } catch (Exception e) {
-            log.error("Failed to process PayPal payment for payment ID: {}", payment.getId(), e);
-            payment.markPaymentFailed("PayPal payment creation failed: " + e.getMessage());
-            paymentRepository.save(payment);
-            throw e;
-        }
-    }
-
-    public PaymentEntity approvePayPalPayment(String paypalOrderId, String payerId) {
-        log.info("Approving PayPal payment with order ID: {} and payer ID: {}", paypalOrderId, payerId);
-
-        PaymentEntity payment = paymentRepository.findByPaypalOrderId(paypalOrderId)
-                .orElseThrow(() -> new RecordNotFoundException("Payment with PayPal order", paypalOrderId));
-
-        if (!PaymentStatus.PAYMENT_CREATED.equals(payment.getPaymentStatus())) {
-            throw new IllegalStateException("Payment is not in PAYMENT_CREATED status, cannot approve");
-        }
-
-        payment.markPayPalApproved(payerId);
-        return paymentRepository.save(payment);
-    }
-
-    public PaymentEntity capturePayPalPayment(String paypalOrderId) {
-        try {
-            log.info("Capturing PayPal payment with order ID: {}", paypalOrderId);
-
-            PaymentEntity payment = paymentRepository.findByPaypalOrderId(paypalOrderId)
-                    .orElseThrow(() -> new RecordNotFoundException("Payment with PayPal order", paypalOrderId));
-
-            if (!PaymentStatus.PAYMENT_APPROVED.equals(payment.getPaymentStatus())) {
-                throw new IllegalStateException("Payment is not in PAYMENT_APPROVED status, cannot capture");
-            }
-
-            PayPalPaymentResponse captureResponse = payPalService.capturePayment(paypalOrderId);
-
-            payment.markPayPalCompleted(captureResponse.getCaptureId());
-            PaymentEntity completedPayment = paymentRepository.save(payment);
-
-            log.info("PayPal payment captured with capture ID: {}", captureResponse.getCaptureId());
-            return completedPayment;
-
-        } catch (Exception e) {
-            log.error("Failed to capture PayPal payment with order ID: {}", paypalOrderId, e);
-
-            PaymentEntity payment = paymentRepository.findByPaypalOrderId(paypalOrderId)
-                    .orElseThrow(() -> new RecordNotFoundException("Payment with PayPal order", paypalOrderId));
-
-            payment.markPaymentFailed("PayPal payment capture failed: " + e.getMessage());
-            paymentRepository.save(payment);
-            throw e;
-        }
-    }
-
-    public PaymentEntity cancelPayment(Long paymentId, String reason) {
-        log.info("Cancelling payment with ID: {} for reason: {}", paymentId, reason);
-
-        PaymentEntity payment = getPaymentById(paymentId);
-
-        if (payment.isCompleted()) {
-            throw new IllegalStateException("Cannot cancel completed payment");
-        }
-
-        payment.markPaymentCancelled(reason);
-        return paymentRepository.save(payment);
-    }
-
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getExpiredPayments() {
-        return paymentRepository.findExpiredPaymentsByStatus(
-                PaymentStatus.PAYMENT_CREATED,
-                LocalDateTime.now()
-        );
-    }
-
-    public void cleanupExpiredPayments() {
-        List<PaymentEntity> expiredPayments = getExpiredPayments();
-
-        for (PaymentEntity payment : expiredPayments) {
-            log.info("Marking expired payment as cancelled: {}", payment.getId());
-            payment.markPaymentCancelled("Payment expired");
-            paymentRepository.save(payment);
-        }
-
-        log.info("Cleaned up {} expired payments", expiredPayments.size());
-    }
+    void cleanupExpiredPayments();
 }

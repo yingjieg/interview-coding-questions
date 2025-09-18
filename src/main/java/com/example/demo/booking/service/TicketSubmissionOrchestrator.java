@@ -57,10 +57,10 @@ public class TicketSubmissionOrchestrator {
             List<String> attractionIds = extractAttractionIds(purchaseDto.getTickets());
 
             boolean submissionSuccess = externalService.submitTicketsToExternalService(
-                orderId,
-                booking.getId(),
-                purchaseDto.getVisitDate(),
-                attractionIds
+                    orderId,
+                    booking.getId(),
+                    purchaseDto.getVisitDate(),
+                    attractionIds
             );
 
             updateBookingSubmissionStatus(booking, submissionSuccess);
@@ -75,7 +75,7 @@ public class TicketSubmissionOrchestrator {
 
         } catch (Exception e) {
             log.error("Error during immediate ticket submission for booking {}: {}",
-                booking.getId(), e.getMessage(), e);
+                    booking.getId(), e.getMessage(), e);
 
             updateBookingSubmissionStatus(booking, false);
             return TicketSubmissionResult.immediateFailure();
@@ -84,19 +84,19 @@ public class TicketSubmissionOrchestrator {
 
     private List<String> extractAttractionIds(List<TicketDto> tickets) {
         return tickets.stream()
-            .map(TicketDto::getAttractionId)
-            .toList();
+                .map(TicketDto::getAttractionId)
+                .toList();
     }
 
     private void updateBookingSubmissionStatus(BookingResponseDto booking, boolean success) {
         try {
             Long bookingId = booking.getId();
             BookingEntity bookingEntity = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RecordNotFoundException("Booking", bookingId));
+                    .orElseThrow(() -> new RecordNotFoundException("Booking", bookingId));
 
             TicketSubmissionStatus status = success ?
-                TicketSubmissionStatus.SUBMITTED :
-                TicketSubmissionStatus.FAILED;
+                    TicketSubmissionStatus.SUBMITTED :
+                    TicketSubmissionStatus.FAILED;
 
             bookingEntity.setTicketSubmissionStatus(status);
 
@@ -114,7 +114,7 @@ public class TicketSubmissionOrchestrator {
 
         } catch (Exception e) {
             log.error("Failed to update booking submission status for booking {}: {}",
-                booking.getId(), e.getMessage(), e);
+                    booking.getId(), e.getMessage(), e);
             // Don't rethrow - we don't want to fail the entire purchase for a status update issue
         }
     }

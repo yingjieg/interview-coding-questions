@@ -41,3 +41,5 @@ CLAUDE.md
 
 ### Local Configuration ###
 src/main/resources/application-local.yml
+
+*.log

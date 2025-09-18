@@ -47,8 +47,8 @@ public class OrderService {
         long unfinishedOrdersCount = orderRepository.countByUserIdAndOrderStatusNot(createOrderDto.getUserId(), OrderStatus.FINISHED);
         if (unfinishedOrdersCount >= 4) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.MAX_UNFINISHED_ORDERS_EXCEEDED,
-                "User cannot have more than 4 unfinished orders. Current unfinished orders: " + unfinishedOrdersCount);
+                    BusinessRuleCode.MAX_UNFINISHED_ORDERS_EXCEEDED,
+                    "User cannot have more than 4 unfinished orders. Current unfinished orders: " + unfinishedOrdersCount);
         }
 
         // Create order entity

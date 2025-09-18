@@ -6,6 +6,7 @@
     <title>Purchase Orchestration - Ticket Booking System</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/json-enc.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,6 +95,36 @@
             border: 2px dashed #007bff;
             background-color: #f8f9fa;
         }
+        .payment-method-section {
+            border: 2px solid #28a745;
+            background-color: #f8fff9;
+        }
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .payment-option:hover {
+            background-color: #f0f0f0;
+        }
+        .payment-option.selected {
+            background-color: #e7f3ff;
+            border-color: #007bff;
+        }
+        #stripe-card-element {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .stripe-payment-form {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -151,6 +182,34 @@
                     </div>
                 </div>
 
+                <!-- Payment Method Selection -->
+                <div class="container payment-method-section">
+                    <h3>Payment Method</h3>
+
+                    <div class="payment-option selected" onclick="selectPaymentMethod('PAYPAL')">
+                        <input type="radio" name="paymentMethod" value="PAYPAL" checked>
+                        <label>💳 PayPal</label>
+                        <span style="font-size: 12px; color: #666;">Pay securely with PayPal</span>
+                    </div>
+
+                    <div class="payment-option" onclick="selectPaymentMethod('STRIPE')">
+                        <input type="radio" name="paymentMethod" value="STRIPE">
+                        <label>💰 Credit/Debit Card (Stripe)</label>
+                        <span style="font-size: 12px; color: #666;">Pay with your card</span>
+                    </div>
+
+                    <!-- Stripe Card Element (hidden by default) -->
+                    <div id="stripe-payment-section" class="stripe-payment-form" style="display: none;">
+                        <div class="form-group">
+                            <label>Card Information:</label>
+                            <div id="stripe-card-element">
+                                <!-- Stripe Elements will create form elements here -->
+                            </div>
+                            <div id="stripe-card-errors" role="alert" style="color: red; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Tickets (Always Required - Exactly 4) -->
                 <h3>Ticket Selection (Exactly 4 Required)</h3>
 
@@ -202,22 +261,69 @@
             <button hx-post="/api/purchases"
                     hx-target="#example-response-1"
                     hx-headers='{"Idempotency-Key": "test-purchase-tickets-only-001"}'
-                    hx-vals='{"userId": 1, "tickets": [{"attractionName": "Test Ride 1"}, {"attractionName": "Test Ride 2"}, {"attractionName": "Test Ride 3"}, {"attractionName": "Test Ride 4"]}'>
-                Purchase Tickets Only (No Booking)
+                    hx-vals='{"userId": 1, "paymentMethod": "PAYPAL", "tickets": [{"attractionName": "Test Ride 1"}, {"attractionName": "Test Ride 2"}, {"attractionName": "Test Ride 3"}, {"attractionName": "Test Ride 4"]}'>
+                Purchase Tickets Only - PayPal
             </button>
             <div id="example-response-1" class="response"></div>
 
             <button hx-post="/api/purchases"
                     hx-target="#example-response-2"
                     hx-headers='{"Idempotency-Key": "test-purchase-with-booking-002"}'
-                    hx-vals='{"userId": 1, "visitDate": "2024-12-25", "documentType": "PASSPORT", "documentNumber": "C11223344", "tickets": [{"attractionName": "Holiday Ride 1"}, {"attractionName": "Holiday Ride 2"}, {"attractionName": "Holiday Ride 3"}, {"attractionName": "Holiday Ride 4"}]}'>
-                Purchase with Booking (Christmas Day)
+                    hx-vals='{"userId": 1, "paymentMethod": "PAYPAL", "visitDate": "2024-12-25", "documentType": "PASSPORT", "documentNumber": "C11223344", "tickets": [{"attractionName": "Holiday Ride 1"}, {"attractionName": "Holiday Ride 2"}, {"attractionName": "Holiday Ride 3"}, {"attractionName": "Holiday Ride 4"}]}'>
+                Purchase with Booking - PayPal
             </button>
             <div id="example-response-2" class="response"></div>
+
+            <button hx-post="/api/purchases"
+                    hx-target="#example-response-3"
+                    hx-headers='{"Idempotency-Key": "test-purchase-stripe-001"}'
+                    hx-vals='{"userId": 1, "paymentMethod": "STRIPE", "tickets": [{"attractionName": "Stripe Ride 1"}, {"attractionName": "Stripe Ride 2"}, {"attractionName": "Stripe Ride 3"}, {"attractionName": "Stripe Ride 4"}]}'>
+                Purchase Tickets Only - Stripe
+            </button>
+            <div id="example-response-3" class="response"></div>
         </div>
     </div>
 
     <script>
+        // Stripe configuration
+        let stripe = null;
+        let cardElement = null;
+        let stripePublishableKey = null;
+
+        // Initialize Stripe when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                // Get Stripe configuration
+                const response = await fetch('/api/stripe/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    stripePublishableKey = config.publishableKey;
+
+                    // Initialize Stripe
+                    stripe = Stripe(stripePublishableKey);
+                    const elements = stripe.elements();
+
+                    // Create card element
+                    cardElement = elements.create('card');
+                    cardElement.mount('#stripe-card-element');
+
+                    // Handle card element changes
+                    cardElement.on('change', function(event) {
+                        const cardErrors = document.getElementById('stripe-card-errors');
+                        if (event.error) {
+                            cardErrors.textContent = event.error.message;
+                        } else {
+                            cardErrors.textContent = '';
+                        }
+                    });
+                } else {
+                    console.warn('Stripe configuration not available:', response.status);
+                }
+            } catch (error) {
+                console.error('Failed to initialize Stripe:', error);
+            }
+        });
+
         // Set tomorrow as the minimum date
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -225,12 +331,34 @@
         document.getElementById('visitDate').min = tomorrowStr;
         document.getElementById('visitDate').value = tomorrowStr;
 
-        function submitPurchase(event) {
+        function selectPaymentMethod(method) {
+            // Update radio button
+            document.querySelector(`input[name="paymentMethod"][value="${method}"]`).checked = true;
+
+            // Update visual selection
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.closest('.payment-option').classList.add('selected');
+
+            // Show/hide Stripe form
+            const stripeSection = document.getElementById('stripe-payment-section');
+            if (method === 'STRIPE') {
+                stripeSection.style.display = 'block';
+            } else {
+                stripeSection.style.display = 'none';
+            }
+        }
+
+        async function submitPurchase(event) {
             event.preventDefault();
 
             const formData = new FormData(event.target);
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
             const payload = {
                 userId: parseInt(formData.get('userId')),
+                paymentMethod: selectedPaymentMethod,
                 tickets: [
                     {
                         attractionId: 'space-mountain-001',
@@ -280,21 +408,39 @@
                             const json = JSON.parse(text);
 
                             // Check if payment information is present
-                            if (json.payment && json.payment.paypalOrderId) {
+                            if (json.payment) {
+                                const paymentType = json.payment.paymentType;
+                                let paymentButtons = '';
+                                let paymentDetails = '';
+
+                                if (paymentType === 'PAYPAL' && json.payment.paypalOrderId) {
+                                    paymentDetails = `<p><strong>PayPal Order ID:</strong> ${json.payment.paypalOrderId}</p>`;
+                                    paymentButtons = `
+                                        <button onclick="redirectToPayPal('${json.payment.paypalApprovalUrl}')"
+                                                style="background: #0070ba; font-size: 16px; padding: 12px 24px; margin-right: 10px;">
+                                            💳 Pay with PayPal
+                                        </button>`;
+                                } else if (paymentType === 'STRIPE' && json.payment.stripePaymentIntentId) {
+                                    paymentDetails = `<p><strong>Stripe Payment Intent ID:</strong> ${json.payment.stripePaymentIntentId}</p>`;
+                                    paymentButtons = `
+                                        <button onclick="handleStripePayment('${json.payment.stripeClientSecret}')"
+                                                style="background: #6772e5; font-size: 16px; padding: 12px 24px; margin-right: 10px;">
+                                            💳 Complete Card Payment
+                                        </button>`;
+                                }
+
                                 target.innerHTML = `
                                     <h3>Purchase Initiated Successfully!</h3>
                                     <p><strong>Order ID:</strong> ${json.order.id}</p>
                                     <p><strong>Total Amount:</strong> $${json.order.totalAmount}</p>
                                     ${json.booking ? `<p><strong>Booking ID:</strong> ${json.booking.id}</p>` : ''}
                                     <p><strong>Payment Status:</strong> ${json.payment.paymentStatus}</p>
-                                    <p><strong>PayPal Order ID:</strong> ${json.payment.paypalOrderId}</p>
+                                    <p><strong>Payment Method:</strong> ${paymentType}</p>
+                                    ${paymentDetails}
 
                                     <div style="margin-top: 20px;">
                                         <p><strong>Next Steps:</strong></p>
-                                        <button onclick="redirectToPayPal('${json.payment.paypalApprovalUrl}')"
-                                                style="background: #0070ba; font-size: 16px; padding: 12px 24px; margin-right: 10px;">
-                                            💳 Pay with PayPal
-                                        </button>
+                                        ${paymentButtons}
                                         <button onclick="window.location.href='/payments.html#payment-${json.payment.id}'"
                                                 style="background: #6c757d; color: white; font-size: 14px; padding: 10px 20px; border: none; border-radius: 4px;">
                                             🔧 Manage Payment
@@ -363,6 +509,39 @@
             // Redirect to PayPal for payment approval
             console.log('Redirecting to PayPal approval URL:', approvalUrl);
             window.location.href = approvalUrl;
+        }
+
+        async function handleStripePayment(clientSecret) {
+            if (!stripe || !cardElement || !clientSecret) {
+                alert('Error: Stripe not properly initialized or missing payment details');
+                return;
+            }
+
+            try {
+                const {error, paymentIntent} = await stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: cardElement
+                    }
+                });
+
+                if (error) {
+                    // Show error to customer
+                    const errorElement = document.getElementById('stripe-card-errors');
+                    errorElement.textContent = error.message;
+                    alert('Payment failed: ' + error.message);
+                } else if (paymentIntent.status === 'succeeded') {
+                    // Payment succeeded
+                    alert('Payment successful! Your order is being processed.');
+
+                    // Redirect to payment manager or reload page
+                    window.location.href = '/payments.html';
+                } else {
+                    alert('Payment status: ' + paymentIntent.status);
+                }
+            } catch (error) {
+                console.error('Error processing Stripe payment:', error);
+                alert('An error occurred while processing your payment. Please try again.');
+            }
         }
 
         // Handle HTMX responses

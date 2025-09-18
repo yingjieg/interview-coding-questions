@@ -57,7 +57,7 @@ public class UserController {
     @ApiResponse(responseCode = "200", description = "Password reset successfully")
     @ApiResponse(responseCode = "400", description = "Invalid or expired token")
     public ResponseEntity<String> resetPassword(@RequestParam String token,
-                                               @RequestParam String newPassword) {
+                                                @RequestParam String newPassword) {
         boolean resetSuccess = userService.resetPassword(token, newPassword);
 
         if (resetSuccess) {

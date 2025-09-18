@@ -49,3 +49,9 @@ paypal:
   mode: ${PAYPAL_MODE:sandbox}
   currency: USD
 
+# Stripe configuration
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:your_stripe_secret_key}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:your_stripe_publishable_key}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:your_stripe_webhook_secret}
+

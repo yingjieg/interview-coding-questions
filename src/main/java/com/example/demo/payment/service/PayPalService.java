@@ -38,23 +38,23 @@ public class PayPalService {
 
             // Set application context (return and cancel URLs)
             ApplicationContext applicationContext = new ApplicationContext()
-                .returnUrl(payPalConfig.getReturnUrl())
-                .cancelUrl(payPalConfig.getCancelUrl())
-                .brandName("Ticket Booking System")
-                .userAction("PAY_NOW")
-                .shippingPreference("NO_SHIPPING");
+                    .returnUrl(payPalConfig.getReturnUrl())
+                    .cancelUrl(payPalConfig.getCancelUrl())
+                    .brandName("Ticket Booking System")
+                    .userAction("PAY_NOW")
+                    .shippingPreference("NO_SHIPPING");
 
             orderRequest.applicationContext(applicationContext);
 
             // Set purchase units
             List<PurchaseUnitRequest> purchaseUnits = new ArrayList<>();
             PurchaseUnitRequest purchaseUnitRequest = new PurchaseUnitRequest()
-                .referenceId(paymentRequest.getReferenceId())
-                .description(paymentRequest.getDescription())
-                .customId(paymentRequest.getCustomId())
-                .amountWithBreakdown(new AmountWithBreakdown()
-                    .currencyCode(paymentRequest.getCurrency())
-                    .value(paymentRequest.getAmount().toString()));
+                    .referenceId(paymentRequest.getReferenceId())
+                    .description(paymentRequest.getDescription())
+                    .customId(paymentRequest.getCustomId())
+                    .amountWithBreakdown(new AmountWithBreakdown()
+                            .currencyCode(paymentRequest.getCurrency())
+                            .value(paymentRequest.getAmount().toString()));
 
             purchaseUnits.add(purchaseUnitRequest);
             orderRequest.purchaseUnits(purchaseUnits);
@@ -71,20 +71,20 @@ public class PayPalService {
 
             // Extract approval URL
             String approvalUrl = order.links().stream()
-                .filter(link -> "approve".equals(link.rel()))
-                .findFirst()
-                .map(LinkDescription::href)
-                .orElseThrow(() -> new PayPalPaymentException("No approval URL found in PayPal response"));
+                    .filter(link -> "approve".equals(link.rel()))
+                    .findFirst()
+                    .map(LinkDescription::href)
+                    .orElseThrow(() -> new PayPalPaymentException("No approval URL found in PayPal response"));
 
             return PayPalPaymentResponse.builder()
-                .orderId(order.id())
-                .status(order.status())
-                .approvalUrl(approvalUrl)
-                .build();
+                    .orderId(order.id())
+                    .status(order.status())
+                    .approvalUrl(approvalUrl)
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to create PayPal payment for reference {}: {}",
-                     paymentRequest.getReferenceId(), e.getMessage(), e);
+                    paymentRequest.getReferenceId(), e.getMessage(), e);
             throw new PayPalPaymentException("payment creation", paymentRequest.getReferenceId(), e);
         }
     }
@@ -98,10 +98,10 @@ public class PayPalService {
             log.info("PayPal payment captured successfully: {}", order.id());
 
             return PayPalPaymentResponse.builder()
-                .orderId(order.id())
-                .status(order.status())
-                .captureId(extractCaptureId(order))
-                .build();
+                    .orderId(order.id())
+                    .status(order.status())
+                    .captureId(extractCaptureId(order))
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to capture PayPal payment for order {}: {}", orderId, e.getMessage(), e);
@@ -116,10 +116,10 @@ public class PayPalService {
             Order order = response.result();
 
             return PayPalPaymentResponse.builder()
-                .orderId(order.id())
-                .status(order.status())
-                .captureId(extractCaptureId(order))
-                .build();
+                    .orderId(order.id())
+                    .status(order.status())
+                    .captureId(extractCaptureId(order))
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to get PayPal payment details for order {}: {}", orderId, e.getMessage(), e);
@@ -129,10 +129,10 @@ public class PayPalService {
 
     private String extractCaptureId(Order order) {
         return order.purchaseUnits().stream()
-            .flatMap(unit -> unit.payments().captures().stream())
-            .findFirst()
-            .map(Capture::id)
-            .orElse(null);
+                .flatMap(unit -> unit.payments().captures().stream())
+                .findFirst()
+                .map(Capture::id)
+                .orElse(null);
     }
 
     private void validateConfiguration() {

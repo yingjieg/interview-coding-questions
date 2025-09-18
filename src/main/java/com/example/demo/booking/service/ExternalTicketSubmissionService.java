@@ -11,7 +11,7 @@ import java.util.List;
 public class ExternalTicketSubmissionService {
 
     public boolean submitTicketsToExternalService(Long orderId, Long bookingId, LocalDate visitDate,
-                                                List<String> attractionIds) {
+                                                  List<String> attractionIds) {
         log.info("Submitting tickets to external service for booking {} (order {}) on visit date {} (24 hours before visit)",
                 bookingId, orderId, visitDate);
         log.info("Attractions to submit: {}", attractionIds);

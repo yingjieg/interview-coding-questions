@@ -32,9 +32,9 @@ public class BookingService {
     private final ExternalBookingService externalBookingService;
 
     public BookingService(BookingRepository bookingRepository,
-                         OrderRepository orderRepository,
-                         BookingMapper bookingMapper,
-                         ExternalBookingService externalBookingService) {
+                          OrderRepository orderRepository,
+                          BookingMapper bookingMapper,
+                          ExternalBookingService externalBookingService) {
         this.bookingRepository = bookingRepository;
         this.orderRepository = orderRepository;
         this.bookingMapper = bookingMapper;
@@ -50,8 +50,8 @@ public class BookingService {
         // Check if booking already exists for this order
         if (bookingRepository.existsByOrderId(createBookingDto.getOrderId())) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.BOOKING_ALREADY_EXISTS,
-                "Booking already exists for order: " + createBookingDto.getOrderId());
+                    BusinessRuleCode.BOOKING_ALREADY_EXISTS,
+                    "Booking already exists for order: " + createBookingDto.getOrderId());
         }
 
         // Validate visit date is at least tomorrow
@@ -63,8 +63,8 @@ public class BookingService {
         // Check if user already has a booking for the same date
         if (bookingRepository.existsByUserIdAndVisitDate(order.getUser().getId(), createBookingDto.getVisitDate())) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.ONE_BOOKING_PER_USER_PER_DAY,
-                "User already has a booking for this date: " + createBookingDto.getVisitDate());
+                    BusinessRuleCode.ONE_BOOKING_PER_USER_PER_DAY,
+                    "User already has a booking for this date: " + createBookingDto.getVisitDate());
         }
 
         // Create booking entity
@@ -172,8 +172,8 @@ public class BookingService {
                     booking.getOrder().getId(), booking.getVisitDate());
         } else {
             throw new ExternalServiceException(
-                "EXTERNAL_BOOKING_SERVICE",
-                "Failed to cancel booking through external system");
+                    "EXTERNAL_BOOKING_SERVICE",
+                    "Failed to cancel booking through external system");
         }
     }
 
@@ -187,22 +187,22 @@ public class BookingService {
         // Check if booking is confirmed
         if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.INVALID_BOOKING_STATUS,
-                "Cannot submit tickets for booking that is not confirmed. Current status: " + booking.getBookingStatus());
+                    BusinessRuleCode.INVALID_BOOKING_STATUS,
+                    "Cannot submit tickets for booking that is not confirmed. Current status: " + booking.getBookingStatus());
         }
 
         // Check if tickets are already submitted
         if (booking.getTicketSubmissionStatus() == TicketSubmissionStatus.SUBMITTED) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.TICKETS_ALREADY_SUBMITTED,
-                "Tickets have already been submitted for this booking");
+                    BusinessRuleCode.TICKETS_ALREADY_SUBMITTED,
+                    "Tickets have already been submitted for this booking");
         }
 
         // Check if visit date is in the past
         if (booking.getVisitDate().isBefore(LocalDate.now())) {
             throw new BusinessRuleViolationException(
-                BusinessRuleCode.CANNOT_SUBMIT_PAST_TICKETS,
-                "Cannot submit tickets for past visit date: " + booking.getVisitDate());
+                    BusinessRuleCode.CANNOT_SUBMIT_PAST_TICKETS,
+                    "Cannot submit tickets for past visit date: " + booking.getVisitDate());
         }
 
         // Call external service to submit tickets
@@ -218,8 +218,8 @@ public class BookingService {
                     booking.getId(), booking.getOrder().getId(), booking.getVisitDate());
         } else {
             throw new ExternalServiceException(
-                "EXTERNAL_TICKETING_SERVICE",
-                "Failed to submit tickets to external system");
+                    "EXTERNAL_TICKETING_SERVICE",
+                    "Failed to submit tickets to external system");
         }
 
         return bookingMapper.toResponseDto(booking);
