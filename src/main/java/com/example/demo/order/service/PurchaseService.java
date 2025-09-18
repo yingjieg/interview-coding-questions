@@ -15,8 +15,8 @@ import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.repository.OrderRepository;
 import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.entity.PaymentType;
-import com.example.demo.payment.service.PayPalPaymentService;
-import com.example.demo.payment.service.StripePaymentService;
+import com.example.demo.payment.service.PaymentService;
+import com.example.demo.payment.service.PaymentProcessingContext;
 import com.example.demo.payment.service.StripeService;
 import com.example.demo.payment.dto.PaymentMapper;
 import com.example.demo.payment.dto.StripePaymentRequest;
@@ -37,8 +37,7 @@ public class PurchaseService {
     private final IdempotencyService idempotencyService;
     private final UserRepository userRepository;
     private final TicketSubmissionOrchestrator ticketSubmissionOrchestrator;
-    private final PayPalPaymentService payPalPaymentService;
-    private final StripePaymentService stripePaymentService;
+    private final PaymentService paymentService;
     private final StripeService stripeService;
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
@@ -48,8 +47,7 @@ public class PurchaseService {
                            IdempotencyService idempotencyService,
                            UserRepository userRepository,
                            TicketSubmissionOrchestrator ticketSubmissionOrchestrator,
-                           PayPalPaymentService payPalPaymentService,
-                           StripePaymentService stripePaymentService,
+                           PaymentService paymentService,
                            StripeService stripeService,
                            OrderRepository orderRepository,
                            PaymentMapper paymentMapper) {
@@ -58,8 +56,7 @@ public class PurchaseService {
         this.idempotencyService = idempotencyService;
         this.userRepository = userRepository;
         this.ticketSubmissionOrchestrator = ticketSubmissionOrchestrator;
-        this.payPalPaymentService = payPalPaymentService;
-        this.stripePaymentService = stripePaymentService;
+        this.paymentService = paymentService;
         this.stripeService = stripeService;
         this.orderRepository = orderRepository;
         this.paymentMapper = paymentMapper;
@@ -68,8 +65,7 @@ public class PurchaseService {
     public PurchaseResponseDto purchaseAndBook(String idempotencyKey, CreatePurchaseDto createPurchaseDto)
             throws BusinessException {
         // Get user for idempotency tracking
-        UserEntity user = userRepository.findById(createPurchaseDto.getUserId())
-                .orElseThrow(() -> new RecordNotFoundException("User", createPurchaseDto.getUserId()));
+        UserEntity user = userRepository.findByIdOrThrow(createPurchaseDto.getUserId(), "User");
 
         // Execute with idempotency protection
         try {
@@ -147,77 +143,37 @@ public class PurchaseService {
 
     private PaymentEntity createPayment(OrderResponseDto orderDto, PaymentType paymentMethod) {
         // Get the full order entity to create payment
-        OrderEntity order = orderRepository.findById(orderDto.getId())
-                .orElseThrow(() -> new RecordNotFoundException("Order", orderDto.getId()));
+        OrderEntity order = orderRepository.findByIdOrThrow(orderDto.getId(), "Order");
 
-        PaymentEntity payment;
-        switch (paymentMethod) {
-            case STRIPE -> {
-                payment = stripePaymentService.createStripePayment(order, orderDto.getTotalAmount());
-                log.info("Stripe payment created: {} for order: {}", payment.getId(), order.getId());
-            }
-            case PAYPAL -> {
-                payment = payPalPaymentService.createPayPalPayment(order, orderDto.getTotalAmount());
-                log.info("PayPal payment created: {} for order: {}", payment.getId(), order.getId());
-            }
-            default -> throw new BusinessRuleViolationException(
-                    com.example.demo.common.exception.BusinessRuleCode.INVALID_PAYMENT_METHOD,
-                    "Unsupported payment method: " + paymentMethod
-            );
-        }
+        PaymentEntity payment = paymentService.createPayment(order, orderDto.getTotalAmount(), paymentMethod);
+        log.info("{} payment created: {} for order: {}", paymentMethod, payment.getId(), order.getId());
         return payment;
     }
 
     private PaymentEntity processPayment(PaymentEntity payment, CreatePurchaseDto createPurchaseDto) {
-        return switch (createPurchaseDto.getPaymentMethod()) {
-            case PAYPAL -> processPayPalPayment(payment);
-            case STRIPE -> processStripePayment(payment, createPurchaseDto);
+        PaymentProcessingContext context = buildProcessingContext(payment.getPaymentType(), createPurchaseDto);
+        return paymentService.processPayment(payment, context);
+    }
+
+    private PaymentProcessingContext buildProcessingContext(PaymentType paymentType, CreatePurchaseDto createPurchaseDto) {
+        return switch (paymentType) {
+            case PAYPAL -> PaymentProcessingContext.forPayPal(
+                    "http://localhost:8888/api/payments/paypal/success",
+                    "http://localhost:8888/api/payments/paypal/cancel"
+            );
+            case STRIPE -> PaymentProcessingContext.forStripe(
+                    createPurchaseDto.getUserId(),
+                    null, // orderId will be set from payment entity
+                    "Ticket Order Purchase"
+            );
             default -> throw new BusinessRuleViolationException(
                     com.example.demo.common.exception.BusinessRuleCode.INVALID_PAYMENT_METHOD,
-                    "Unsupported payment method: " + createPurchaseDto.getPaymentMethod()
+                    "Unsupported payment method: " + paymentType
             );
         };
     }
 
-    private PaymentEntity processPayPalPayment(PaymentEntity payment) {
-        // Build PayPal URLs - in real implementation, these would come from configuration
-        String returnUrl = "http://localhost:8888/api/payments/paypal/success";
-        String cancelUrl = "http://localhost:8888/api/payments/paypal/cancel";
 
-        PaymentEntity processedPayment = payPalPaymentService.processPayPalPayment(payment, returnUrl, cancelUrl);
-        log.info("PayPal payment processed: {} with PayPal order ID: {}",
-                processedPayment.getId(), processedPayment.getPaypalOrderId());
-        return processedPayment;
-    }
-
-    private PaymentEntity processStripePayment(PaymentEntity payment, CreatePurchaseDto createPurchaseDto) {
-        // Create Stripe Payment Intent
-        StripePaymentRequest stripeRequest = new StripePaymentRequest();
-        stripeRequest.setAmount(payment.getAmount().multiply(java.math.BigDecimal.valueOf(100)).longValue()); // Convert to cents
-        stripeRequest.setCurrency(payment.getCurrency().toLowerCase());
-        stripeRequest.setDescription("Ticket Booking Order #" + payment.getOrder().getId());
-        stripeRequest.setOrderId(payment.getOrder().getId().toString());
-        stripeRequest.setUserId(createPurchaseDto.getUserId().toString());
-
-        StripePaymentResponse stripeResponse = stripeService.createPaymentIntent(stripeRequest);
-
-        if (stripeResponse.getErrorMessage() != null) {
-            log.error("Stripe Payment Intent creation failed: {}", stripeResponse.getErrorMessage());
-            throw new BusinessException("STRIPE_PAYMENT_FAILED", "Failed to create Stripe payment: " + stripeResponse.getErrorMessage());
-        }
-
-        // Update payment entity with Stripe details
-        payment.markStripeCreated(
-                stripeResponse.getPaymentIntentId(),
-                stripeResponse.getClientSecret(),
-                payment.getAmount()
-        );
-
-        PaymentEntity processedPayment = stripePaymentService.savePayment(payment);
-        log.info("Stripe payment processed: {} with Payment Intent ID: {}",
-                processedPayment.getId(), processedPayment.getStripePaymentIntentId());
-        return processedPayment;
-    }
 
     private BookingResponseDto createBookingIfRequired(CreatePurchaseDto createPurchaseDto, OrderResponseDto order) {
         if (createPurchaseDto.getVisitDate() == null) {

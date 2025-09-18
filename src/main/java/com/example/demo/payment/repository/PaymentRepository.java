@@ -1,8 +1,8 @@
 package com.example.demo.payment.repository;
 
+import com.example.demo.common.repository.BaseRepository;
 import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.entity.PaymentStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<PaymentEntity, Long> {
+public interface PaymentRepository extends BaseRepository<PaymentEntity, Long> {
 
     Optional<PaymentEntity> findByOrderId(Long orderId);
 

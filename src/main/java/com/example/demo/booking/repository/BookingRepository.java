@@ -3,7 +3,7 @@ package com.example.demo.booking.repository;
 import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.BookingStatus;
 import com.example.demo.booking.entity.TicketSubmissionStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.demo.common.repository.BaseRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface BookingRepository extends JpaRepository<BookingEntity, Long> {
+public interface BookingRepository extends BaseRepository<BookingEntity, Long> {
 
     List<BookingEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 

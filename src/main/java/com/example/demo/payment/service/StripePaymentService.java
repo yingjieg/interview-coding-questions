@@ -1,7 +1,10 @@
 package com.example.demo.payment.service;
 
+import com.example.demo.common.exception.BusinessException;
 import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.entity.OrderEntity;
+import com.example.demo.payment.dto.StripePaymentRequest;
+import com.example.demo.payment.dto.StripePaymentResponse;
 import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.entity.PaymentStatus;
 import com.example.demo.payment.entity.PaymentType;
@@ -19,79 +22,86 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class StripePaymentService implements PaymentService {
+public class StripePaymentService implements PaymentProviderService {
 
     private final PaymentRepository paymentRepository;
     private final StripeService stripeService;
+    private final PaymentEntityFactory paymentEntityFactory;
 
     @Override
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Payment", id));
+    public PaymentType getSupportedPaymentType() {
+        return PaymentType.STRIPE;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentByOrderId(Long orderId) {
-        return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RecordNotFoundException("Payment for order", orderId));
+    public PaymentEntity createPayment(OrderEntity order, BigDecimal amount) {
+        return createStripePayment(order, amount);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getUserPayments(Long userId) {
-        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public PaymentEntity processPayment(PaymentEntity payment, PaymentProcessingContext context) {
+        return processStripePayment(payment, context);
     }
 
     @Override
-    public PaymentEntity savePayment(PaymentEntity payment) {
-        log.info("Saving payment with ID: {}", payment.getId());
-        return paymentRepository.save(payment);
+    public PaymentEntity cancelPayment(PaymentEntity payment, String reason) {
+        return cancelPayment(payment.getId(), reason);
     }
 
-    @Override
-    public PaymentEntity createPayPalPayment(OrderEntity order, BigDecimal amount) {
-        throw new UnsupportedOperationException("PayPal payments are not supported by StripePaymentService. Use PayPalPaymentService instead.");
-    }
 
-    @Override
+
+
+
+
+
     public PaymentEntity createStripePayment(OrderEntity order, BigDecimal amount) {
         log.info("Creating Stripe payment for order {} with amount {}", order.getId(), amount);
 
-        PaymentEntity payment = new PaymentEntity();
-        payment.setOrder(order);
-        payment.setPaymentType(PaymentType.STRIPE);
-        payment.setAmount(amount);
-        payment.setCurrency("USD");
-        payment.setPaymentStatus(PaymentStatus.PENDING);
-
+        PaymentEntity payment = paymentEntityFactory.createPayment(order, amount, PaymentType.STRIPE);
         PaymentEntity savedPayment = paymentRepository.save(payment);
         log.info("Created payment with ID: {}", savedPayment.getId());
 
         return savedPayment;
     }
 
-    @Override
-    public PaymentEntity processPayPalPayment(PaymentEntity payment, String returnUrl, String cancelUrl) {
-        throw new UnsupportedOperationException("PayPal payment processing is not supported by StripePaymentService. Use PayPalPaymentService instead.");
+    public PaymentEntity processStripePayment(PaymentEntity payment, PaymentProcessingContext context) {
+        log.info("Processing Stripe payment for payment ID: {}", payment.getId());
+
+        // Create Stripe Payment Intent
+        StripePaymentRequest stripeRequest = new StripePaymentRequest();
+        stripeRequest.setAmount(payment.getAmount().multiply(BigDecimal.valueOf(100)).longValue()); // Convert to cents
+        stripeRequest.setCurrency(payment.getCurrency().toLowerCase());
+        stripeRequest.setDescription("Ticket Booking Order #" + payment.getOrder().getId());
+        stripeRequest.setOrderId(payment.getOrder().getId().toString());
+        stripeRequest.setUserId(context.getUserId() != null ? context.getUserId().toString() : null);
+
+        StripePaymentResponse stripeResponse = stripeService.createPaymentIntent(stripeRequest);
+
+        if (stripeResponse.getErrorMessage() != null) {
+            log.error("Stripe Payment Intent creation failed: {}", stripeResponse.getErrorMessage());
+            throw new BusinessException("STRIPE_PAYMENT_FAILED", "Failed to create Stripe payment: " + stripeResponse.getErrorMessage());
+        }
+
+        // Update payment entity with Stripe details
+        payment.markStripeCreated(
+                stripeResponse.getPaymentIntentId(),
+                stripeResponse.getClientSecret(),
+                payment.getAmount()
+        );
+
+        PaymentEntity processedPayment = paymentRepository.save(payment);
+        log.info("Stripe payment processed: {} with Payment Intent ID: {}",
+                processedPayment.getId(), processedPayment.getStripePaymentIntentId());
+        return processedPayment;
     }
 
-    @Override
-    public PaymentEntity approvePayPalPayment(String paypalOrderId, String payerId) {
-        throw new UnsupportedOperationException("PayPal payment approval is not supported by StripePaymentService. Use PayPalPaymentService instead.");
-    }
 
-    @Override
-    public PaymentEntity capturePayPalPayment(String paypalOrderId) {
-        throw new UnsupportedOperationException("PayPal payment capture is not supported by StripePaymentService. Use PayPalPaymentService instead.");
-    }
 
-    @Override
+
     public PaymentEntity cancelPayment(Long paymentId, String reason) {
         log.info("Cancelling payment with ID: {} for reason: {}", paymentId, reason);
 
-        PaymentEntity payment = getPaymentById(paymentId);
+        PaymentEntity payment = paymentRepository.findByIdOrThrow(paymentId, "Payment");
 
         if (payment.isCompleted()) {
             throw new IllegalStateException("Cannot cancel completed payment");
@@ -101,25 +111,5 @@ public class StripePaymentService implements PaymentService {
         return paymentRepository.save(payment);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getExpiredPayments() {
-        return paymentRepository.findExpiredPaymentsByStatus(
-                PaymentStatus.PAYMENT_CREATED,
-                LocalDateTime.now()
-        );
-    }
 
-    @Override
-    public void cleanupExpiredPayments() {
-        List<PaymentEntity> expiredPayments = getExpiredPayments();
-
-        for (PaymentEntity payment : expiredPayments) {
-            log.info("Marking expired payment as cancelled: {}", payment.getId());
-            payment.markPaymentCancelled("Payment expired");
-            paymentRepository.save(payment);
-        }
-
-        log.info("Cleaned up {} expired payments", expiredPayments.size());
-    }
 }

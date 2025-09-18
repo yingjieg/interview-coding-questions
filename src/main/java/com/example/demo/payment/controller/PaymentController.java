@@ -4,6 +4,7 @@ import com.example.demo.payment.dto.PaymentMapper;
 import com.example.demo.payment.dto.PaymentResponseDto;
 import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.service.PaymentService;
+import com.example.demo.payment.service.PayPalPaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PayPalPaymentService payPalPaymentService;
     private final PaymentMapper paymentMapper;
 
     @GetMapping("/{paymentId}")
@@ -79,10 +81,10 @@ public class PaymentController {
 
         try {
             // Approve the payment
-            PaymentEntity approvedPayment = paymentService.approvePayPalPayment(paypalOrderId, payerId);
+            PaymentEntity approvedPayment = payPalPaymentService.approvePayPalPayment(paypalOrderId, payerId);
 
             // Capture the payment
-            PaymentEntity completedPayment = paymentService.capturePayPalPayment(paypalOrderId);
+            PaymentEntity completedPayment = payPalPaymentService.capturePayPalPayment(paypalOrderId);
 
             PaymentResponseDto response = paymentMapper.toDto(completedPayment);
             return ResponseEntity.ok(response);

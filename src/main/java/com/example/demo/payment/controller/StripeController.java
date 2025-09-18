@@ -99,17 +99,4 @@ public class StripeController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Handle webhook", description = "Handle Stripe webhook events")
-    @PostMapping("/webhook")
-    public ResponseEntity<String> handleWebhook(
-            @RequestBody String payload,
-            @RequestHeader("Stripe-Signature") String sigHeader) {
-        log.info("Received Stripe webhook");
-
-        // TODO: Implement webhook verification and processing
-        // This is important for production to handle payment completion events
-
-        log.warn("Stripe webhook processing not implemented yet");
-        return ResponseEntity.ok("Webhook received but not processed");
-    }
 }

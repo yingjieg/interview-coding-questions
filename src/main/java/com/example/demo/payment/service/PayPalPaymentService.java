@@ -22,60 +22,47 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class PayPalPaymentService implements PaymentService {
+public class PayPalPaymentService implements PaymentProviderService {
 
     private final PaymentRepository paymentRepository;
     private final PayPalService payPalService;
+    private final PaymentEntityFactory paymentEntityFactory;
 
     @Override
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Payment", id));
+    public PaymentType getSupportedPaymentType() {
+        return PaymentType.PAYPAL;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PaymentEntity getPaymentByOrderId(Long orderId) {
-        return paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RecordNotFoundException("Payment for order", orderId));
+    public PaymentEntity createPayment(OrderEntity order, BigDecimal amount) {
+        return createPayPalPayment(order, amount);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getUserPayments(Long userId) {
-        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public PaymentEntity processPayment(PaymentEntity payment, PaymentProcessingContext context) {
+        return processPayPalPayment(payment, context.getReturnUrl(), context.getCancelUrl());
     }
 
     @Override
+    public PaymentEntity cancelPayment(PaymentEntity payment, String reason) {
+        return cancelPayment(payment.getId(), reason);
+    }
+
+
+    // PayPal-specific methods
+
     public PaymentEntity createPayPalPayment(OrderEntity order, BigDecimal amount) {
         log.info("Creating PayPal payment for order {} with amount {}", order.getId(), amount);
 
-        PaymentEntity payment = new PaymentEntity();
-        payment.setOrder(order);
-        payment.setPaymentType(PaymentType.PAYPAL);
-        payment.setAmount(amount);
-        payment.setCurrency("USD");
-        payment.setPaymentStatus(PaymentStatus.PENDING);
-
+        PaymentEntity payment = paymentEntityFactory.createPayment(order, amount, PaymentType.PAYPAL);
         PaymentEntity savedPayment = paymentRepository.save(payment);
         log.info("Created payment with ID: {}", savedPayment.getId());
 
         return savedPayment;
     }
 
-    @Override
-    public PaymentEntity createStripePayment(OrderEntity order, BigDecimal amount) {
-        throw new UnsupportedOperationException("Stripe payments are not supported by PayPalPaymentService. Use StripePaymentService instead.");
-    }
 
-    @Override
-    public PaymentEntity savePayment(PaymentEntity payment) {
-        log.info("Saving payment with ID: {}", payment.getId());
-        return paymentRepository.save(payment);
-    }
 
-    @Override
     public PaymentEntity processPayPalPayment(PaymentEntity payment, String returnUrl, String cancelUrl) {
         try {
             log.info("Processing PayPal payment for payment ID: {}", payment.getId());
@@ -105,7 +92,6 @@ public class PayPalPaymentService implements PaymentService {
         }
     }
 
-    @Override
     public PaymentEntity approvePayPalPayment(String paypalOrderId, String payerId) {
         log.info("Approving PayPal payment with order ID: {} and payer ID: {}", paypalOrderId, payerId);
 
@@ -120,7 +106,6 @@ public class PayPalPaymentService implements PaymentService {
         return paymentRepository.save(payment);
     }
 
-    @Override
     public PaymentEntity capturePayPalPayment(String paypalOrderId) {
         try {
             log.info("Capturing PayPal payment with order ID: {}", paypalOrderId);
@@ -152,11 +137,10 @@ public class PayPalPaymentService implements PaymentService {
         }
     }
 
-    @Override
     public PaymentEntity cancelPayment(Long paymentId, String reason) {
         log.info("Cancelling payment with ID: {} for reason: {}", paymentId, reason);
 
-        PaymentEntity payment = getPaymentById(paymentId);
+        PaymentEntity payment = paymentRepository.findByIdOrThrow(paymentId, "Payment");
 
         if (payment.isCompleted()) {
             throw new IllegalStateException("Cannot cancel completed payment");
@@ -166,25 +150,5 @@ public class PayPalPaymentService implements PaymentService {
         return paymentRepository.save(payment);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PaymentEntity> getExpiredPayments() {
-        return paymentRepository.findExpiredPaymentsByStatus(
-                PaymentStatus.PAYMENT_CREATED,
-                LocalDateTime.now()
-        );
-    }
 
-    @Override
-    public void cleanupExpiredPayments() {
-        List<PaymentEntity> expiredPayments = getExpiredPayments();
-
-        for (PaymentEntity payment : expiredPayments) {
-            log.info("Marking expired payment as cancelled: {}", payment.getId());
-            payment.markPaymentCancelled("Payment expired");
-            paymentRepository.save(payment);
-        }
-
-        log.info("Cleaned up {} expired payments", expiredPayments.size());
-    }
 }

@@ -1,15 +1,15 @@
 package com.example.demo.order.repository;
 
+import com.example.demo.common.repository.BaseRepository;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.entity.OrderStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
+public interface OrderRepository extends BaseRepository<OrderEntity, Long> {
 
     List<OrderEntity> findByUserIdOrderByCreatedAtDesc(Long userId);
 

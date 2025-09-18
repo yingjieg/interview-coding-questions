@@ -35,8 +35,7 @@ public class OrderService {
     @Transactional
     public OrderResponseDto createOrder(CreateOrderDto createOrderDto) {
         // Validate user exists
-        UserEntity user = userRepository.findById(createOrderDto.getUserId())
-                .orElseThrow(() -> new RecordNotFoundException("User", createOrderDto.getUserId()));
+        UserEntity user = userRepository.findByIdOrThrow(createOrderDto.getUserId(), "User");
 
         // Validate exactly 4 tickets - double check even though DTO validation should catch this
         if (createOrderDto.getTickets() == null || createOrderDto.getTickets().size() != 4) {
@@ -72,6 +71,7 @@ public class OrderService {
     }
 
     public OrderResponseDto getOrder(Long orderId) {
+        // Note: Using custom query method as it includes items, not BaseRepository method
         OrderEntity order = orderRepository.findByIdWithItems(orderId);
         if (order == null) {
             throw new RecordNotFoundException("Order", orderId);
