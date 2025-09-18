@@ -13,6 +13,7 @@ import com.example.demo.common.exception.BusinessRuleViolationException;
 import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.common.exception.ExternalServiceException;
 import com.example.demo.common.validation.DateValidationUtils;
+import com.example.demo.common.utils.DateUtils;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -217,8 +218,7 @@ public class BookingService {
 
     public List<BookingResponseDto> getBookingsForTicketSubmission() {
         // Get bookings that need ticket submission (confirmed, not yet submitted, visit date is tomorrow)
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        List<BookingEntity> bookings = bookingRepository.findBookingsForTicketSubmission(tomorrow);
+        List<BookingEntity> bookings = bookingRepository.findBookingsForTicketSubmission(DateUtils.tomorrow());
         return bookingMapper.toResponseDtos(bookings);
     }
 }

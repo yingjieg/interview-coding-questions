@@ -174,7 +174,6 @@ public class PurchaseService {
     }
 
 
-
     private BookingResponseDto createBookingIfRequired(CreatePurchaseDto createPurchaseDto, OrderResponseDto order) {
         if (createPurchaseDto.getVisitDate() == null) {
             log.info("No visit date provided - purchase only for order {}", order.getId());

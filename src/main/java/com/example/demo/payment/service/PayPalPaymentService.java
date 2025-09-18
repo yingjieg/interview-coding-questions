@@ -62,7 +62,6 @@ public class PayPalPaymentService implements PaymentProviderService {
     }
 
 
-
     public PaymentEntity processPayPalPayment(PaymentEntity payment, String returnUrl, String cancelUrl) {
         try {
             log.info("Processing PayPal payment for payment ID: {}", payment.getId());

@@ -5,6 +5,7 @@ import com.example.demo.booking.entity.BookingEntity;
 import com.example.demo.booking.entity.TicketSubmissionStatus;
 import com.example.demo.booking.repository.BookingRepository;
 import com.example.demo.common.exception.RecordNotFoundException;
+import com.example.demo.common.utils.DateUtils;
 import com.example.demo.order.dto.CreatePurchaseDto;
 import com.example.demo.order.dto.TicketDto;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +43,7 @@ public class TicketSubmissionOrchestrator {
     }
 
     private boolean shouldSubmitImmediately(LocalDate visitDate) {
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        return visitDate.equals(tomorrow);
+        return visitDate.equals(DateUtils.tomorrow());
     }
 
     private TicketSubmissionResult performImmediateSubmission(

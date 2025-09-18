@@ -1,8 +1,10 @@
 package com.example.demo.common.validation;
 
 import com.example.demo.order.dto.CreatePurchaseDto;
+import com.example.demo.common.utils.DateUtils;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 
@@ -23,7 +25,7 @@ public class VisitDateValidator implements ConstraintValidator<ValidVisitDate, C
         context.disableDefaultConstraintViolation();
 
         LocalDate visitDate = dto.getVisitDate();
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalDate tomorrow = DateUtils.tomorrow();
 
         // Check if visit date is at least tomorrow
         if (visitDate.isBefore(tomorrow)) {
@@ -47,7 +49,7 @@ public class VisitDateValidator implements ConstraintValidator<ValidVisitDate, C
         }
 
         // Check if document number is provided when visit date is provided
-        if (dto.getDocumentNumber() == null || dto.getDocumentNumber().trim().isEmpty()) {
+        if (StringUtils.isBlank(dto.getDocumentNumber())) {
             context.buildConstraintViolationWithTemplate(
                             "Document number is required when visit date is provided"
                     )

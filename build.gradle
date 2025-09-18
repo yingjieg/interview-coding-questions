@@ -40,6 +40,9 @@ dependencies {
 	// Stripe SDK
 	implementation 'com.stripe:stripe-java:29.5.0'
 
+	// Apache Commons Lang for string utilities
+	implementation 'org.apache.commons:commons-lang3:3.18.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'

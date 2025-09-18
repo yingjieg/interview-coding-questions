@@ -49,11 +49,6 @@ public class StripePaymentService implements PaymentProviderService {
     }
 
 
-
-
-
-
-
     public PaymentEntity createStripePayment(OrderEntity order, BigDecimal amount) {
         log.info("Creating Stripe payment for order {} with amount {}", order.getId(), amount);
 
@@ -94,8 +89,6 @@ public class StripePaymentService implements PaymentProviderService {
                 processedPayment.getId(), processedPayment.getStripePaymentIntentId());
         return processedPayment;
     }
-
-
 
 
     public PaymentEntity cancelPayment(Long paymentId, String reason) {

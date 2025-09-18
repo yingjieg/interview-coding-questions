@@ -5,6 +5,7 @@ import com.example.demo.payment.dto.PayPalPaymentRequest;
 import com.example.demo.payment.dto.PayPalPaymentResponse;
 import com.example.demo.payment.exception.PayPalConfigurationException;
 import com.example.demo.payment.exception.PayPalPaymentException;
+import org.apache.commons.lang3.StringUtils;
 import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
@@ -136,10 +137,10 @@ public class PayPalService {
     }
 
     private void validateConfiguration() {
-        if (payPalConfig.getClientId() == null || payPalConfig.getClientId().trim().isEmpty()) {
+        if (StringUtils.isBlank(payPalConfig.getClientId())) {
             throw new PayPalConfigurationException("client-id", "missing or empty");
         }
-        if (payPalConfig.getClientSecret() == null || payPalConfig.getClientSecret().trim().isEmpty()) {
+        if (StringUtils.isBlank(payPalConfig.getClientSecret())) {
             throw new PayPalConfigurationException("client-secret", "missing or empty");
         }
         if (payPalConfig.getReturnUrl() == null || payPalConfig.getCancelUrl() == null) {
@@ -151,10 +152,10 @@ public class PayPalService {
         if (request.getAmount() == null || request.getAmount().signum() <= 0) {
             throw new PayPalPaymentException("Invalid payment amount: must be greater than zero");
         }
-        if (request.getReferenceId() == null || request.getReferenceId().trim().isEmpty()) {
+        if (StringUtils.isBlank(request.getReferenceId())) {
             throw new PayPalPaymentException("Invalid payment request: reference ID is required");
         }
-        if (request.getDescription() == null || request.getDescription().trim().isEmpty()) {
+        if (StringUtils.isBlank(request.getDescription())) {
             throw new PayPalPaymentException("Invalid payment request: description is required");
         }
     }

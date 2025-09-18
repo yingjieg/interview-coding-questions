@@ -15,6 +15,7 @@ import com.example.demo.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class OrderService {
         UserEntity user = userRepository.findByIdOrThrow(createOrderDto.getUserId(), "User");
 
         // Validate exactly 4 tickets - double check even though DTO validation should catch this
-        if (createOrderDto.getTickets() == null || createOrderDto.getTickets().size() != 4) {
+        if (CollectionUtils.isEmpty(createOrderDto.getTickets()) || createOrderDto.getTickets().size() != 4) {
             throw new BusinessRuleViolationException(BusinessRuleCode.INVALID_TICKET_COUNT);
         }
 

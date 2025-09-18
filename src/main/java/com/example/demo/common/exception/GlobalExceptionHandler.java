@@ -3,6 +3,7 @@ package com.example.demo.common.exception;
 import com.example.demo.payment.exception.PayPalConfigurationException;
 import com.example.demo.payment.exception.PayPalPaymentException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,9 +26,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("recordType", ex.getArgs()[0]);
-            if (ex.getArgs().length > 1) {
+            if (ArrayUtils.getLength(ex.getArgs()) > 1) {
                 problemDetail.setProperty("recordId", ex.getArgs()[1]);
             }
         }
@@ -44,7 +45,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("details", ex.getArgs()[0]);
         }
 
@@ -60,7 +61,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("rule", ex.getArgs()[0]);
         }
 
@@ -88,7 +89,7 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("serviceName", ex.getArgs()[0]);
         }
 
@@ -127,9 +128,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("operation", ex.getArgs()[0]);
-            if (ex.getArgs().length > 1) {
+            if (ArrayUtils.getLength(ex.getArgs()) > 1) {
                 problemDetail.setProperty("orderId", ex.getArgs()[1]);
             }
         }
@@ -146,9 +147,9 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("errorCode", ex.getErrorCode());
         problemDetail.setProperty("timestamp", Instant.now());
 
-        if (ex.getArgs() != null && ex.getArgs().length > 0) {
+        if (ArrayUtils.isNotEmpty(ex.getArgs())) {
             problemDetail.setProperty("configField", ex.getArgs()[0]);
-            if (ex.getArgs().length > 1) {
+            if (ArrayUtils.getLength(ex.getArgs()) > 1) {
                 problemDetail.setProperty("issue", ex.getArgs()[1]);
             }
         }

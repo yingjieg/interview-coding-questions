@@ -16,7 +16,7 @@ public interface BaseRepository<T, ID> extends JpaRepository<T, ID> {
      * This eliminates the repeated pattern of:
      * repository.findById(id).orElseThrow(() -> new RecordNotFoundException("Entity", id))
      *
-     * @param id the entity ID
+     * @param id         the entity ID
      * @param entityName the entity name for error messages
      * @return the found entity
      * @throws RecordNotFoundException if entity not found

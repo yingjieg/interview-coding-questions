@@ -2,6 +2,7 @@ package com.example.demo.common.validation;
 
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
+import com.example.demo.common.utils.DateUtils;
 
 import java.time.LocalDate;
 
@@ -16,8 +17,7 @@ public final class DateValidationUtils {
             throw new IllegalArgumentException("Visit date cannot be null");
         }
 
-        LocalDate tomorrow = LocalDate.now().plusDays(1);
-        if (visitDate.isBefore(tomorrow)) {
+        if (visitDate.isBefore(DateUtils.tomorrow())) {
             throw new BusinessRuleViolationException(BusinessRuleCode.INVALID_VISIT_DATE);
         }
     }

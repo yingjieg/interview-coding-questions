@@ -2,6 +2,7 @@ package com.example.demo.common.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.apache.commons.lang3.StringUtils;
 
 public class IdempotencyKeyValidator implements ConstraintValidator<ValidIdempotencyKey, String> {
 
@@ -14,7 +15,7 @@ public class IdempotencyKeyValidator implements ConstraintValidator<ValidIdempot
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
-        if (value == null || value.trim().isEmpty()) {
+        if (StringUtils.isBlank(value)) {
             context.disableDefaultConstraintViolation();
             context.buildConstraintViolationWithTemplate("Idempotency key is required")
                     .addConstraintViolation();

@@ -4,6 +4,7 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,7 +20,7 @@ public class StripeConfig {
 
     @PostConstruct
     public void init() {
-        if (secretKey == null || secretKey.isEmpty() || secretKey.equals("your_stripe_secret_key")) {
+        if (StringUtils.isBlank(secretKey) || StringUtils.equals(secretKey, "your_stripe_secret_key")) {
             log.warn("Stripe secret key not configured. Stripe payments will not work.");
             return;
         }
@@ -38,11 +39,9 @@ public class StripeConfig {
     }
 
     public boolean isConfigured() {
-        return secretKey != null &&
-                !secretKey.isEmpty() &&
-                !secretKey.equals("your_stripe_secret_key") &&
-                publishableKey != null &&
-                !publishableKey.isEmpty() &&
-                !publishableKey.equals("your_stripe_publishable_key");
+        return StringUtils.isNotBlank(secretKey) &&
+                !StringUtils.equals(secretKey, "your_stripe_secret_key") &&
+                StringUtils.isNotBlank(publishableKey) &&
+                !StringUtils.equals(publishableKey, "your_stripe_publishable_key");
     }
 }
