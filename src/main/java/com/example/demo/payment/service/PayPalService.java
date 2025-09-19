@@ -39,8 +39,8 @@ public class PayPalService {
 
             // Set application context (return and cancel URLs)
             ApplicationContext applicationContext = new ApplicationContext()
-                    .returnUrl(payPalConfig.getReturnUrl())
-                    .cancelUrl(payPalConfig.getCancelUrl())
+                    .returnUrl(paymentRequest.getReturnUrl())
+                    .cancelUrl(paymentRequest.getCancelUrl())
                     .brandName("Ticket Booking System")
                     .userAction("PAY_NOW")
                     .shippingPreference("NO_SHIPPING");
