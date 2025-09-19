@@ -158,8 +158,8 @@ public class PurchaseService {
     private PaymentProcessingContext buildProcessingContext(PaymentType paymentType, CreatePurchaseDto createPurchaseDto) {
         return switch (paymentType) {
             case PAYPAL -> PaymentProcessingContext.forPayPal(
-                    "http://localhost:8888/api/payments/paypal/success",
-                    "http://localhost:8888/api/payments/paypal/cancel"
+                    getBackendUrl() + "/api/payments/paypal/success",
+                    getBackendUrl() + "/api/payments/paypal/cancel"
             );
             case STRIPE -> PaymentProcessingContext.forStripe(
                     createPurchaseDto.getUserId(),
@@ -173,6 +173,11 @@ public class PurchaseService {
         };
     }
 
+    private String getBackendUrl() {
+        // Get from environment variable or default to localhost
+        return System.getProperty("backend.url",
+                System.getenv("BACKEND_URL") != null ? System.getenv("BACKEND_URL") : "http://localhost:8888");
+    }
 
     private BookingResponseDto createBookingIfRequired(CreatePurchaseDto createPurchaseDto, OrderResponseDto order) {
         if (createPurchaseDto.getVisitDate() == null) {

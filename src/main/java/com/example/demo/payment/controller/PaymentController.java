@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,8 +74,8 @@ public class PaymentController {
 
     @GetMapping("/paypal/success")
     @Operation(summary = "Handle PayPal payment success callback")
-    @ApiResponse(responseCode = "200", description = "Payment approved successfully")
-    public ResponseEntity<PaymentResponseDto> handlePayPalSuccess(
+    @ApiResponse(responseCode = "302", description = "Redirect to frontend success page")
+    public ResponseEntity<Void> handlePayPalSuccess(
             @Parameter(description = "PayPal Order ID") @RequestParam("token") String paypalOrderId,
             @Parameter(description = "PayPal Payer ID") @RequestParam("PayerID") String payerId) {
         log.info("Handling PayPal success for order ID: {} and payer ID: {}", paypalOrderId, payerId);
@@ -86,25 +87,49 @@ public class PaymentController {
             // Capture the payment
             PaymentEntity completedPayment = payPalPaymentService.capturePayPalPayment(paypalOrderId);
 
-            PaymentResponseDto response = paymentMapper.toDto(completedPayment);
-            return ResponseEntity.ok(response);
+            // Redirect to frontend success page
+            String frontendUrl = getFrontendUrl();
+            String redirectUrl = frontendUrl + "/order/confirmation?orderId=" + completedPayment.getOrder().getId() + "&paymentSuccess=true";
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", redirectUrl)
+                    .build();
 
         } catch (Exception e) {
             log.error("Failed to complete PayPal payment for order ID: {}", paypalOrderId, e);
-            throw e;
+
+            // Redirect to frontend error page
+            String frontendUrl = getFrontendUrl();
+            String errorUrl = frontendUrl + "/payment?error=payment_failed&message=" +
+                    java.net.URLEncoder.encode("PayPal payment processing failed", "UTF-8");
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", errorUrl)
+                    .build();
         }
     }
 
     @GetMapping("/paypal/cancel")
     @Operation(summary = "Handle PayPal payment cancellation")
-    @ApiResponse(responseCode = "200", description = "Payment cancelled successfully")
-    public ResponseEntity<String> handlePayPalCancel(
+    @ApiResponse(responseCode = "302", description = "Redirect to frontend cancel page")
+    public ResponseEntity<Void> handlePayPalCancel(
             @Parameter(description = "PayPal Order ID") @RequestParam("token") String paypalOrderId) {
         log.info("Handling PayPal cancellation for order ID: {}", paypalOrderId);
 
-        // For now, just log the cancellation
-        // In a real implementation, you might want to update the payment status
-        return ResponseEntity.ok("Payment cancelled successfully");
+        // Redirect to frontend payment page with cancellation message
+        String frontendUrl = getFrontendUrl();
+        String cancelUrl = frontendUrl + "/payment?cancelled=true&message=" +
+                java.net.URLEncoder.encode("Payment was cancelled", "UTF-8");
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", cancelUrl)
+                .build();
+    }
+
+    private String getFrontendUrl() {
+        // Get from environment variable or default to localhost
+        return System.getProperty("frontend.url",
+               System.getenv("FRONTEND_URL") != null ? System.getenv("FRONTEND_URL") : "http://localhost:3001");
     }
 
     @PostMapping("/{paymentId}/cancel")
