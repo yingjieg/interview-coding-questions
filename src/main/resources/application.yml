@@ -62,3 +62,18 @@ jwt:
     expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:your_stripe_webhook_secret}
 
+# CORS configuration
+cors:
+  allowed-origins:
+    - http://localhost:3001
+    - http://localhost:3000
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600
+
