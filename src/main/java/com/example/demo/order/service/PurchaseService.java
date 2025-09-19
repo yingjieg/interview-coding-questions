@@ -174,9 +174,9 @@ public class PurchaseService {
     }
 
     private String getBackendUrl() {
-        // Get from environment variable or default to localhost
-        return System.getProperty("backend.url",
-                System.getenv("BACKEND_URL") != null ? System.getenv("BACKEND_URL") : "http://localhost:8888");
+        // Use frontend proxy URL for PayPal callbacks to avoid CORS issues
+        return System.getProperty("frontend.proxy.url",
+                System.getenv("FRONTEND_PROXY_URL") != null ? System.getenv("FRONTEND_PROXY_URL") : "http://localhost:3001/backend");
     }
 
     private BookingResponseDto createBookingIfRequired(CreatePurchaseDto createPurchaseDto, OrderResponseDto order) {
