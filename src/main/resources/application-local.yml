@@ -1,0 +1,49 @@
+# Template for Local Development Configuration
+# Copy this file to application-local.yml and fill in your PayPal credentials
+# Use with: --spring.profiles.active=local
+
+# PayPal Configuration (Sandbox for Testing)
+# 1. Go to https://developer.paypal.com/
+# 2. Create a sandbox application
+# 3. Copy your Client ID and Client Secret below
+paypal:
+  client-id: AccJFos4AqS4-gjxPDrVygjiZZZuhVKZ_zxeiI446UoAC2rzUvVp_g2DsJDMIOyZurVRmN6YYcbGsT3
+  client-secret: ENQZd4ZarqPKYmLHSETSX0iGweJEPOrD8ABe8VTcka4WZ-IJ_yYPHgfUKbLivyP4-DUzVX87w-32WhYQ
+  mode: sandbox  # Use 'live' for production
+  base-url: https://api.sandbox.paypal.com
+  return-url: http://localhost:8888/api/payments/paypal/success
+  cancel-url: http://localhost:8888/api/payments/paypal/cancel
+
+# Override any other local-specific settings here if needed
+spring:
+  jpa:
+    show-sql: true  # Show SQL queries in local development
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    url: jdbc:postgresql://db.blusoxrfzfmvmwwusbgn.supabase.co:5432/postgres
+    username: postgres
+    password: "Appen123!@#"
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    user:
+      name: admin
+      password: password
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+
+logging:
+  level:
+    com.example.demo: DEBUG
+    com.paypal: DEBUG
