@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -100,12 +101,20 @@ public class PaymentController {
 
             // Redirect to frontend error page
             String frontendUrl = getFrontendUrl();
-            String errorUrl = frontendUrl + "/payment?error=payment_failed&message=" +
-                    java.net.URLEncoder.encode("PayPal payment processing failed", "UTF-8");
+            try {
+                String errorUrl = frontendUrl + "/payment?error=payment_failed&message=" +
+                        java.net.URLEncoder.encode("PayPal payment processing failed", "UTF-8");
 
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", errorUrl)
-                    .build();
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", errorUrl)
+                        .build();
+            } catch (UnsupportedEncodingException encodingException) {
+                log.error("Failed to encode error message", encodingException);
+                String errorUrl = frontendUrl + "/payment?error=payment_failed";
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .header("Location", errorUrl)
+                        .build();
+            }
         }
     }
 
@@ -118,12 +127,20 @@ public class PaymentController {
 
         // Redirect to frontend payment page with cancellation message
         String frontendUrl = getFrontendUrl();
-        String cancelUrl = frontendUrl + "/payment?cancelled=true&message=" +
-                java.net.URLEncoder.encode("Payment was cancelled", "UTF-8");
+        try {
+            String cancelUrl = frontendUrl + "/payment?cancelled=true&message=" +
+                    java.net.URLEncoder.encode("Payment was cancelled", "UTF-8");
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header("Location", cancelUrl)
-                .build();
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", cancelUrl)
+                    .build();
+        } catch (UnsupportedEncodingException e) {
+            log.error("Failed to encode cancellation message", e);
+            String cancelUrl = frontendUrl + "/payment?cancelled=true";
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", cancelUrl)
+                    .build();
+        }
     }
 
     private String getFrontendUrl() {
