@@ -2,9 +2,12 @@ package com.example.demo.user;
 
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
+import com.example.demo.security.JwtService;
 import com.example.demo.user.dto.UserRegistrationDto;
 import com.example.demo.user.dto.UserLoginDto;
 import com.example.demo.user.dto.PasswordResetDto;
+import com.example.demo.user.dto.AuthenticationResponseDto;
+import com.example.demo.user.dto.UserDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -20,13 +23,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       EmailService emailService) {
+                       EmailService emailService,
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.jwtService = jwtService;
     }
 
     public UserEntity registerUser(UserRegistrationDto registrationDto) {
@@ -91,6 +97,49 @@ public class UserService {
         }
 
         return passwordMatch;
+    }
+
+    public AuthenticationResponseDto authenticateUser(UserLoginDto loginDto) {
+        Optional<UserEntity> userOpt = userRepository.findByEmail(loginDto.getEmail());
+
+        if (userOpt.isEmpty()) {
+            return null;
+        }
+
+        UserEntity user = userOpt.get();
+        if (!user.getEnabled()) {
+            return null;
+        }
+
+        boolean passwordMatch = passwordEncoder.matches(loginDto.getPassword(), user.getPassword());
+
+        if (!passwordMatch) {
+            return null;
+        }
+
+        // Generate JWT tokens
+        String accessToken = jwtService.generateToken(user.getEmail());
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+        // Build user DTO
+        UserDto userDto = UserDto.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .enabled(user.getEnabled())
+                .emailVerified(user.getEmailVerified())
+                .build();
+
+        log.info("User authenticated successfully with JWT: {}", user.getEmail());
+
+        return AuthenticationResponseDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .expiresIn(86400) // 24 hours in seconds
+                .user(userDto)
+                .build();
     }
 
     public void requestPasswordReset(PasswordResetDto resetDto) {

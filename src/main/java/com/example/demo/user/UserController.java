@@ -3,10 +3,12 @@ package com.example.demo.user;
 import com.example.demo.user.dto.UserRegistrationDto;
 import com.example.demo.user.dto.UserLoginDto;
 import com.example.demo.user.dto.PasswordResetDto;
+import com.example.demo.user.dto.AuthenticationResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -25,7 +27,9 @@ public class UserController {
     @ApiResponse(responseCode = "400", description = "Email already exists")
     public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDto registrationDto) {
         registrationDto.setEmail(registrationDto.getEmail().toLowerCase());
-        UserEntity user = userService.registerUser(registrationDto);
+
+        userService.registerUser(registrationDto);
+
         return ResponseEntity.ok("User registered successfully. Check your email for verification.");
     }
 
@@ -42,6 +46,23 @@ public class UserController {
         } else {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
+    }
+
+    @PostMapping("/authenticate")
+    @Operation(summary = "Authenticate user and get JWT tokens")
+    @ApiResponse(responseCode = "200", description = "Authentication successful")
+    @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    public ResponseEntity<?> authenticate(@Valid @RequestBody UserLoginDto loginDto,
+                                        HttpServletRequest request) {
+        loginDto.setEmail(loginDto.getEmail().toLowerCase());
+
+        AuthenticationResponseDto authResponse = userService.authenticateUser(loginDto);
+
+        if (authResponse == null) {
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
+
+        return ResponseEntity.ok(authResponse);
     }
 
     @PostMapping("/forgot-password")
@@ -80,4 +101,5 @@ public class UserController {
             return ResponseEntity.badRequest().body("Invalid verification token");
         }
     }
+
 }

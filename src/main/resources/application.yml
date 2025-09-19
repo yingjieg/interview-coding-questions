@@ -53,5 +53,12 @@ paypal:
 stripe:
   secret-key: ${STRIPE_SECRET_KEY:your_stripe_secret_key}
   publishable-key: ${STRIPE_PUBLISHABLE_KEY:your_stripe_publishable_key}
+
+# JWT configuration
+jwt:
+  secret-key: ${JWT_SECRET_KEY:ZGVmYXVsdFNlY3JldEtleUZvckRldmVsb3BtZW50T25seU11c3RCZUF0TGVhc3QyNTZCaXRzTG9uZw==}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  refresh-token:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:your_stripe_webhook_secret}
 
