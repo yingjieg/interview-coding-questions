@@ -7,41 +7,39 @@
 # 2. Create a sandbox application
 # 3. Copy your Client ID and Client Secret below
 paypal:
-  client-id: AccJFos4AqS4-gjxPDrVygjiZZZuhVKZ_zxeiI446UoAC2rzUvVp_g2DsJDMIOyZurVRmN6YYcbGsT3
+  client-id: AccJFos4AqS4-gjxPDrVygjiZZZuhVKZ_zx4eiI446UoAC2rzUvVp_g2DsJDMIOyZurVRmN6YYcbGsT3
   client-secret: ENQZd4ZarqPKYmLHSETSX0iGweJEPOrD8ABe8VTcka4WZ-IJ_yYPHgfUKbLivyP4-DUzVX87w-32WhYQ
   mode: sandbox  # Use 'live' for production
   base-url: https://api.sandbox.paypal.com
   return-url: http://localhost:8888/api/payments/paypal/success
   cancel-url: http://localhost:8888/api/payments/paypal/cancel
 
-# Override any other local-specific settings here if needed
+# Database configuration for local development
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/demo
+    username: postgres
+    password: mypassword
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate configuration for local development
   jpa:
+    hibernate:
+      ddl-auto: create-drop  # Recreate schema on each restart for testing
     show-sql: true  # Show SQL queries in local development
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: public
-    hibernate:
-      ddl-auto: create-drop
-  datasource:
-    url: jdbc:postgresql://db.blusoxrfzfmvmwwusbgn.supabase.co:5432/postgres
-    username: postgres
-    password: "Appen123!@#"
-    driver-class-name: org.postgresql.Driver
+        format_sql: true
 
-  security:
-    user:
-      name: admin
-      password: password
-
+# API Documentation - enabled for local development only
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-
 
 logging:
   level:
