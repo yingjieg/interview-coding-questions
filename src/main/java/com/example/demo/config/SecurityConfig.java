@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/users/register", "/api/users/login", "/api/users/forgot-password", "/api/users/reset-password", "/api/users/verify").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/", "/users", "/orders", "/bookings", "/purchase", "/static/**", "/*.html", "/*.css", "/*.js").permitAll()
                         .requestMatchers("/api/stripe/**").permitAll() // Add Stripe endpoints as public for now
+                        .requestMatchers("/api/payments/paypal/**").permitAll() // PayPal callbacks are public
                         // Protected endpoints - require authentication
                         .requestMatchers("/api/orders/**", "/api/bookings/**", "/api/purchases/**", "/api/payments/**").authenticated()
                         .anyRequest().authenticated()
