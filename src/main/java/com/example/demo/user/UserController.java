@@ -34,26 +34,11 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login user")
+    @Operation(summary = "Login user and get JWT tokens")
     @ApiResponse(responseCode = "200", description = "Login successful")
     @ApiResponse(responseCode = "401", description = "Invalid credentials")
-    public ResponseEntity<String> login(@Valid @RequestBody UserLoginDto loginDto) {
-        loginDto.setEmail(loginDto.getEmail().toLowerCase());
-        boolean loginSuccess = userService.loginUser(loginDto);
-
-        if (loginSuccess) {
-            return ResponseEntity.ok("Login successful");
-        } else {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
-    }
-
-    @PostMapping("/authenticate")
-    @Operation(summary = "Authenticate user and get JWT tokens")
-    @ApiResponse(responseCode = "200", description = "Authentication successful")
-    @ApiResponse(responseCode = "401", description = "Invalid credentials")
-    public ResponseEntity<?> authenticate(@Valid @RequestBody UserLoginDto loginDto,
-                                        HttpServletRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginDto loginDto,
+                                 HttpServletRequest request) {
         loginDto.setEmail(loginDto.getEmail().toLowerCase());
 
         AuthenticationResponseDto authResponse = userService.authenticateUser(loginDto);
@@ -64,6 +49,7 @@ public class UserController {
 
         return ResponseEntity.ok(authResponse);
     }
+
 
     @PostMapping("/forgot-password")
     @Operation(summary = "Request password reset")
