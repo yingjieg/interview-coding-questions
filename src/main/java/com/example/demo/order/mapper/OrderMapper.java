@@ -16,6 +16,7 @@ import java.util.List;
 public interface OrderMapper {
 
     @Mapping(source = "user.id", target = "userId")
+    @Mapping(target = "totalAmount", ignore = true)
     OrderResponseDto toResponseDto(OrderEntity orderEntity);
 
     List<OrderResponseDto> toResponseDtos(List<OrderEntity> orderEntities);
