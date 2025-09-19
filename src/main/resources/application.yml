@@ -16,12 +16,14 @@ spring:
   # JPA configuration - development friendly
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create}
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:create-drop}
     show-sql: ${SPRING_JPA_SHOW_SQL:true}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Auto-import data after DDL creation
+        hbm2ddl.import_files: import.sql
 
 # Basic management endpoints
 management:
