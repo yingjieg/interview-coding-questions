@@ -35,18 +35,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        log.debug("JWT Filter - Processing request: {} {}", request.getMethod(), request.getServletPath());
+
         if (request.getServletPath().contains("/api/auth") ||
             request.getServletPath().contains("/api/users/register") ||
             request.getServletPath().contains("/api/users/login")) {
+            log.debug("JWT Filter - Skipping authentication for public endpoint: {}", request.getServletPath());
             filterChain.doFilter(request, response);
             return;
         }
 
         final String authHeader = request.getHeader("Authorization");
+        log.debug("JWT Filter - Authorization header: {}", authHeader != null ? authHeader.substring(0, Math.min(20, authHeader.length())) + "..." : "null");
+
         final String jwt;
         final String userEmail;
 
         if (StringUtils.isBlank(authHeader) || !authHeader.startsWith("Bearer ")) {
+            log.warn("JWT Filter - No valid Authorization header found for protected endpoint: {}", request.getServletPath());
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,35 +61,48 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             userEmail = jwtService.extractUsername(jwt);
+            log.debug("JWT Filter - Extracted username from token: {}", userEmail);
 
             if (StringUtils.isNotBlank(userEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
                 Optional<UserEntity> userOpt = userRepository.findByEmail(userEmail);
+                log.debug("JWT Filter - User found in database: {}", userOpt.isPresent());
 
-                if (userOpt.isPresent() && jwtService.isTokenValid(jwt, userEmail)) {
-                    UserEntity user = userOpt.get();
+                if (userOpt.isPresent()) {
+                    boolean isTokenValid = jwtService.isTokenValid(jwt, userEmail);
+                    log.debug("JWT Filter - Token validation result: {}", isTokenValid);
 
-                    // Create a simple user details object for Spring Security
-                    UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                            .username(user.getEmail())
-                            .password(user.getPassword())
-                            .authorities("USER")
-                            .accountExpired(false)
-                            .accountLocked(!user.getEnabled())
-                            .credentialsExpired(false)
-                            .disabled(!user.getEnabled())
-                            .build();
+                    if (isTokenValid) {
+                        UserEntity user = userOpt.get();
 
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+                        // Create a simple user details object for Spring Security
+                        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                                .username(user.getEmail())
+                                .password(user.getPassword())
+                                .authorities("USER")
+                                .accountExpired(false)
+                                .accountLocked(!user.getEnabled())
+                                .credentialsExpired(false)
+                                .disabled(!user.getEnabled())
+                                .build();
 
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-                    log.debug("JWT authentication successful for user: {}", userEmail);
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                        log.debug("JWT authentication successful for user: {}", userEmail);
+                    } else {
+                        log.warn("JWT Filter - Token validation failed for user: {}", userEmail);
+                    }
+                } else {
+                    log.warn("JWT Filter - User not found for email: {}", userEmail);
                 }
+            } else {
+                log.debug("JWT Filter - Username blank or already authenticated");
             }
         } catch (Exception e) {
             log.warn("JWT authentication failed: {}", e.getMessage());
