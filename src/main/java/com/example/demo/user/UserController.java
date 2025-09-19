@@ -25,12 +25,12 @@ public class UserController {
     @Operation(summary = "Register a new user")
     @ApiResponse(responseCode = "200", description = "User registered successfully")
     @ApiResponse(responseCode = "400", description = "Email already exists")
-    public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDto registrationDto) {
+    public ResponseEntity<UserEntity> register(@Valid @RequestBody UserRegistrationDto registrationDto) {
         registrationDto.setEmail(registrationDto.getEmail().toLowerCase());
 
-        userService.registerUser(registrationDto);
+        UserEntity user = userService.registerUser(registrationDto);
 
-        return ResponseEntity.ok("User registered successfully. Check your email for verification.");
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/login")
