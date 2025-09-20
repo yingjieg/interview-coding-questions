@@ -23,6 +23,8 @@ public interface PaymentRepository extends BaseRepository<PaymentEntity, Long> {
 
     Optional<PaymentEntity> findByPaypalOrderId(String paypalOrderId);
 
+    Optional<PaymentEntity> findByStripePaymentIntentId(String stripePaymentIntentId);
+
     Optional<PaymentEntity> findByExternalTransactionId(String externalTransactionId);
 
     @Query("SELECT p FROM PaymentEntity p WHERE p.order.user.id = :userId ORDER BY p.createdAt DESC")

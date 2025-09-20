@@ -2,6 +2,7 @@ package com.example.demo.payment.service;
 
 import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.entity.OrderEntity;
+import com.example.demo.order.service.OrderService;
 import com.example.demo.payment.dto.PayPalCaptureResponse;
 import com.example.demo.payment.dto.PayPalPaymentRequest;
 import com.example.demo.payment.dto.PayPalPaymentResponse;
@@ -27,6 +28,7 @@ public class PayPalPaymentService implements PaymentProviderService {
     private final PaymentRepository paymentRepository;
     private final PayPalService payPalService;
     private final PaymentEntityFactory paymentEntityFactory;
+    private final OrderService orderService;
 
     @Override
     public PaymentType getSupportedPaymentType() {
@@ -120,6 +122,9 @@ public class PayPalPaymentService implements PaymentProviderService {
 
             payment.markPayPalCompleted(captureResponse.getCaptureId());
             PaymentEntity completedPayment = paymentRepository.save(payment);
+
+            // Update order status to CONFIRMED when payment is completed
+            orderService.confirmOrder(completedPayment.getOrder().getId());
 
             log.info("PayPal payment captured with capture ID: {}", captureResponse.getCaptureId());
             return completedPayment;

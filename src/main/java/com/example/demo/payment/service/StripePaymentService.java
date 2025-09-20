@@ -3,6 +3,7 @@ package com.example.demo.payment.service;
 import com.example.demo.common.exception.BusinessException;
 import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.entity.OrderEntity;
+import com.example.demo.order.service.OrderService;
 import com.example.demo.payment.dto.StripePaymentRequest;
 import com.example.demo.payment.dto.StripePaymentResponse;
 import com.example.demo.payment.entity.PaymentEntity;
@@ -27,6 +28,7 @@ public class StripePaymentService implements PaymentProviderService {
     private final PaymentRepository paymentRepository;
     private final StripeService stripeService;
     private final PaymentEntityFactory paymentEntityFactory;
+    private final OrderService orderService;
 
     @Override
     public PaymentType getSupportedPaymentType() {
@@ -104,5 +106,27 @@ public class StripePaymentService implements PaymentProviderService {
         return paymentRepository.save(payment);
     }
 
+    @Transactional
+    public PaymentEntity markStripePaymentCompleted(String paymentIntentId, String chargeId, String paymentMethodId) {
+        log.info("Marking Stripe payment as completed for Payment Intent: {}", paymentIntentId);
+
+        PaymentEntity payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
+                .orElseThrow(() -> new RecordNotFoundException("Payment with Stripe Payment Intent", paymentIntentId));
+
+        if (payment.isCompleted()) {
+            log.warn("Payment {} is already completed", payment.getId());
+            return payment;
+        }
+
+        payment.markStripeCompleted(chargeId, paymentMethodId);
+        PaymentEntity completedPayment = paymentRepository.save(payment);
+
+        // Update order status to CONFIRMED when payment is completed
+        orderService.confirmOrder(completedPayment.getOrder().getId());
+
+        log.info("Stripe payment {} completed and order {} confirmed",
+                completedPayment.getId(), completedPayment.getOrder().getId());
+        return completedPayment;
+    }
 
 }

@@ -84,4 +84,22 @@ public class OrderService {
         List<OrderEntity> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return orderMapper.toResponseDtos(orders);
     }
+
+    @Transactional
+    public OrderResponseDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
+        OrderEntity order = orderRepository.findByIdOrThrow(orderId, "Order");
+
+        log.info("Updating order {} status from {} to {}", orderId, order.getOrderStatus(), newStatus);
+
+        order.setOrderStatus(newStatus);
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        return orderMapper.toResponseDto(savedOrder);
+    }
+
+    @Transactional
+    public void confirmOrder(Long orderId) {
+        updateOrderStatus(orderId, OrderStatus.CONFIRMED);
+        log.info("Order {} confirmed", orderId);
+    }
 }
