@@ -2,9 +2,9 @@ package com.example.demo.payment.entity;
 
 import com.example.demo.order.entity.OrderEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

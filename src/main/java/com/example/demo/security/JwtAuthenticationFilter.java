@@ -1,7 +1,7 @@
 package com.example.demo.security;
 
-import com.example.demo.user.UserRepository;
 import com.example.demo.user.UserEntity;
+import com.example.demo.user.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,13 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -72,21 +71,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (isTokenValid) {
                         UserEntity user = userOpt.get();
 
-                        // Create a simple user details object for Spring Security
-                        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                                .username(user.getEmail())
-                                .password(user.getPassword())
-                                .authorities("USER")
-                                .accountExpired(false)
-                                .accountLocked(!user.getEnabled())
-                                .credentialsExpired(false)
-                                .disabled(!user.getEnabled())
-                                .build();
-
+                        // Create authentication token with the UserEntity as principal
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                userDetails,
+                                user, // Use UserEntity directly as principal
                                 null,
-                                userDetails.getAuthorities()
+                                List.of(() -> "ROLE_USER") // Simple authority
                         );
 
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -3,7 +3,6 @@ package com.example.demo.payment.service;
 import com.example.demo.common.exception.RecordNotFoundException;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.order.service.OrderService;
-import com.example.demo.payment.dto.PayPalCaptureResponse;
 import com.example.demo.payment.dto.PayPalPaymentRequest;
 import com.example.demo.payment.dto.PayPalPaymentResponse;
 import com.example.demo.payment.entity.PaymentEntity;
@@ -16,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @Slf4j

@@ -3,9 +3,9 @@ package com.example.demo.booking.entity;
 import com.example.demo.order.entity.OrderEntity;
 import com.example.demo.user.UserEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

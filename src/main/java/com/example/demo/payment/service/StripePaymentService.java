@@ -7,7 +7,6 @@ import com.example.demo.order.service.OrderService;
 import com.example.demo.payment.dto.StripePaymentRequest;
 import com.example.demo.payment.dto.StripePaymentResponse;
 import com.example.demo.payment.entity.PaymentEntity;
-import com.example.demo.payment.entity.PaymentStatus;
 import com.example.demo.payment.entity.PaymentType;
 import com.example.demo.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @Slf4j

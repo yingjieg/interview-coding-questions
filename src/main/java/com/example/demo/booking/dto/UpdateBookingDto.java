@@ -1,7 +1,8 @@
 package com.example.demo.booking.dto;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 

@@ -1,8 +1,8 @@
 package com.example.demo.booking.dto;
 
 import com.example.demo.booking.entity.DocumentType;
-import lombok.Data;
 import jakarta.validation.constraints.*;
+import lombok.Data;
 
 import java.time.LocalDate;
 

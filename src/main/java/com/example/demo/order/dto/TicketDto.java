@@ -1,7 +1,8 @@
 package com.example.demo.order.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import jakarta.validation.constraints.*;
 
 @Data
 public class TicketDto {

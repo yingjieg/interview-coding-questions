@@ -57,25 +57,29 @@ This guide explains how to run the Ticket Booking System using Docker.
 The application supports the following environment variables:
 
 #### Database
+
 - `SPRING_DATASOURCE_URL` - PostgreSQL connection URL
 - `SPRING_DATASOURCE_USERNAME` - Database username
 - `SPRING_DATASOURCE_PASSWORD` - Database password
 
 #### PayPal (Required for payment features)
+
 - `PAYPAL_CLIENT_ID` - Your PayPal client ID
 - `PAYPAL_CLIENT_SECRET` - Your PayPal client secret
 - `PAYPAL_MODE` - `sandbox` or `live`
 
 #### Application
+
 - `LOGGING_LEVEL_ROOT` - Root logging level (default: `INFO`)
 - `LOGGING_LEVEL_COM_EXAMPLE` - Application-specific logging level
 
 #### Database/JPA (Production-Safe Defaults)
+
 - `SPRING_JPA_HIBERNATE_DDL_AUTO` - Database schema management (default: `validate`)
-  - `validate` - Production-safe: only validates schema
-  - `create` - Development: recreates schema
-  - `update` - Development: updates schema
-  - `none` - Production: no schema management
+    - `validate` - Production-safe: only validates schema
+    - `create` - Development: recreates schema
+    - `update` - Development: updates schema
+    - `none` - Production: no schema management
 - `SPRING_JPA_SHOW_SQL` - Show SQL queries in logs (default: `false`)
 - `SPRING_JPA_FORMAT_SQL` - Format SQL queries (default: `false`)
 - `SPRING_JPA_GENERATE_STATISTICS` - Generate Hibernate statistics (default: `false`)
@@ -95,6 +99,7 @@ LOGGING_LEVEL_COM_EXAMPLE=DEBUG
 ```
 
 Then run with:
+
 ```bash
 docker-compose --env-file .env up --build
 ```
@@ -114,6 +119,7 @@ Once running, access the application at:
 ## Logs
 
 ### View application logs:
+
 ```bash
 # With docker-compose
 docker-compose logs -f app
@@ -127,6 +133,7 @@ docker logs -f ticket-booking-app
 ## Database Access
 
 ### Connect to PostgreSQL:
+
 ```bash
 # With docker-compose
 docker-compose exec db psql -U postgres -d demo
@@ -164,13 +171,14 @@ docker exec -it postgres-db psql -U postgres -d demo
    ```
 
 4. **PayPal integration not working:**
-   - Ensure `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` are set
-   - Check that you're using the correct PayPal mode (`sandbox` vs `live`)
-   - Verify PayPal credentials are valid
+    - Ensure `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` are set
+    - Check that you're using the correct PayPal mode (`sandbox` vs `live`)
+    - Verify PayPal credentials are valid
 
 ## Development
 
 ### For development with live reload:
+
 ```bash
 # Run only database
 docker-compose up -d db
@@ -180,6 +188,7 @@ docker-compose up -d db
 ```
 
 ### Useful commands:
+
 ```bash
 # View container status
 docker-compose ps
@@ -200,12 +209,14 @@ docker-compose down -v --rmi all
 ## Production Considerations
 
 ### 1. **Database Schema Management:**
+
 ```bash
 # For production, use database migrations instead of Hibernate DDL
 SPRING_JPA_HIBERNATE_DDL_AUTO=validate  # or none
 ```
 
 ### 2. **Security:**
+
 - Change default database passwords
 - Use proper PayPal production credentials
 - Configure proper CORS origins
@@ -213,6 +224,7 @@ SPRING_JPA_HIBERNATE_DDL_AUTO=validate  # or none
 - Set secure JWT secrets
 
 ### 3. **Performance:**
+
 ```bash
 # Production-optimized settings
 SPRING_JPA_SHOW_SQL=false
@@ -225,6 +237,7 @@ LOGGING_LEVEL_COM_EXAMPLE=INFO
 ### 4. **Production Configuration:**
 
 For production, copy the template and configure it:
+
 ```bash
 # Copy production template
 cp src/main/resources/application-prod.yml.template src/main/resources/application-prod.yml
@@ -234,6 +247,7 @@ SPRING_PROFILES_ACTIVE=prod
 ```
 
 **Production Environment Variables:**
+
 ```bash
 # Database
 SPRING_DATASOURCE_URL=jdbc:postgresql://prod-db-host:5432/prod_db
@@ -254,9 +268,11 @@ LOGGING_LEVEL_ROOT=WARN
 ```
 
 ### 5. **Database Migrations:**
+
 Consider using Flyway or Liquibase for production database schema management instead of Hibernate DDL auto.
 
 ### 6. **Monitoring:**
+
 - Use health check endpoints
 - Monitor application logs
 - Set up proper alerting

@@ -6,7 +6,6 @@ import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.entity.PaymentStatus;
 import com.example.demo.payment.entity.PaymentType;
 import com.example.demo.payment.repository.PaymentRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;

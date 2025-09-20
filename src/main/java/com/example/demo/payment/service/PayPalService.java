@@ -5,11 +5,11 @@ import com.example.demo.payment.dto.PayPalPaymentRequest;
 import com.example.demo.payment.dto.PayPalPaymentResponse;
 import com.example.demo.payment.exception.PayPalConfigurationException;
 import com.example.demo.payment.exception.PayPalPaymentException;
-import org.apache.commons.lang3.StringUtils;
 import com.paypal.core.PayPalHttpClient;
 import com.paypal.http.HttpResponse;
 import com.paypal.orders.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

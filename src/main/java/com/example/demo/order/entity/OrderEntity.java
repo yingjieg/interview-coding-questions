@@ -4,9 +4,9 @@ import com.example.demo.payment.entity.PaymentEntity;
 import com.example.demo.payment.entity.PaymentType;
 import com.example.demo.user.UserEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;

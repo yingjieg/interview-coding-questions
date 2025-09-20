@@ -1,11 +1,13 @@
 package com.example.demo.order.dto;
 
 import com.example.demo.booking.entity.DocumentType;
-import com.example.demo.payment.entity.PaymentType;
 import com.example.demo.common.validation.ValidVisitDate;
-import lombok.Data;
-import jakarta.validation.constraints.*;
+import com.example.demo.payment.entity.PaymentType;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,8 +16,6 @@ import java.util.List;
 @ValidVisitDate
 public class CreatePurchaseDto {
 
-    @NotNull(message = "User ID is required")
-    @Min(value = 1, message = "User ID must be greater than 0")
     private Long userId;
 
     @Future(message = "Visit date must be in the future")

@@ -1,11 +1,11 @@
 package com.example.demo.order.controller;
 
 import com.example.demo.common.exception.BusinessException;
-import com.example.demo.common.exception.IdempotencyException;
 import com.example.demo.common.validation.ValidIdempotencyKey;
 import com.example.demo.order.dto.CreatePurchaseDto;
 import com.example.demo.order.dto.PurchaseResponseDto;
 import com.example.demo.order.service.PurchaseService;
+import com.example.demo.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
@@ -33,7 +33,13 @@ public class PurchaseController {
     @ApiResponse(responseCode = "502", description = "External service error")
     public ResponseEntity<PurchaseResponseDto> createPurchase(
             @RequestHeader("Idempotency-Key") @ValidIdempotencyKey String idempotencyKey,
-            @Valid @RequestBody CreatePurchaseDto createPurchaseDto) throws BusinessException, IdempotencyException {
+            @Valid @RequestBody CreatePurchaseDto createPurchaseDto) throws BusinessException {
+
+        // Get current user from SecurityContext (from JWT)
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+
+        // Set the user ID from security context (overriding any client-provided value)
+        createPurchaseDto.setUserId(currentUserId);
 
         PurchaseResponseDto response = purchaseService.purchaseAndBook(idempotencyKey, createPurchaseDto);
         return ResponseEntity.ok(response);

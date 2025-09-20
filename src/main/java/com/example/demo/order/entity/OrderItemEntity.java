@@ -1,10 +1,9 @@
 package com.example.demo.order.entity;
 
-import com.example.demo.order.entity.OrderEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "order_items")

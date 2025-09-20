@@ -1,8 +1,10 @@
 package com.example.demo.order.dto;
 
-import lombok.Data;
-import jakarta.validation.constraints.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.util.List;
 

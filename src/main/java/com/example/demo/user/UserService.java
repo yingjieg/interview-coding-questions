@@ -3,14 +3,10 @@ package com.example.demo.user;
 import com.example.demo.common.exception.BusinessRuleCode;
 import com.example.demo.common.exception.BusinessRuleViolationException;
 import com.example.demo.security.JwtService;
-import com.example.demo.user.dto.UserRegistrationDto;
-import com.example.demo.user.dto.UserLoginDto;
-import com.example.demo.user.dto.PasswordResetDto;
-import com.example.demo.user.dto.AuthenticationResponseDto;
-import com.example.demo.user.dto.UserDto;
+import com.example.demo.user.dto.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -116,8 +112,8 @@ public class UserService {
             return null;
         }
 
-        // Generate JWT token
-        String accessToken = jwtService.generateToken(user.getEmail());
+        // Generate JWT token with user information
+        String accessToken = jwtService.generateToken(user.getEmail(), user.getId(), user.getFullName());
 
         // Build user DTO
         UserDto userDto = UserDto.builder()

@@ -15,18 +15,21 @@
             padding: 20px;
             background-color: #f5f5f5;
         }
+
         .container {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
+
         .nav {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
+
         .nav a {
             padding: 10px 20px;
             background: #007bff;
@@ -34,17 +37,21 @@
             text-decoration: none;
             border-radius: 4px;
         }
+
         .nav a:hover {
             background: #0056b3;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
+
         input, textarea, select {
             width: 100%;
             padding: 8px;
@@ -52,6 +59,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+
         button {
             background: #28a745;
             color: white;
@@ -61,63 +69,93 @@
             cursor: pointer;
             margin-right: 10px;
         }
+
         button:hover {
             background: #218838;
         }
+
         button.danger {
             background: #dc3545;
         }
+
         button.danger:hover {
             background: #c82333;
         }
+
         button.warning {
             background: #ffc107;
             color: #212529;
         }
+
         button.warning:hover {
             background: #e0a800;
         }
+
         button.info {
             background: #17a2b8;
         }
+
         button.info:hover {
             background: #138496;
         }
+
         button.paypal {
             background: #0070ba;
             color: white;
             font-size: 16px;
             padding: 12px 24px;
         }
+
         button.paypal:hover {
             background: #005ea6;
         }
+
         .response {
             margin-top: 20px;
             padding: 15px;
             border-radius: 4px;
             white-space: pre-wrap;
         }
+
         .success {
             background: #d4edda;
             border: 1px solid #c3e6cb;
             color: #155724;
         }
+
         .error {
             background: #f8d7da;
             border: 1px solid #f5c6cb;
             color: #721c24;
         }
+
         .payment-status {
             padding: 5px 10px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
         }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-approved { background: #d4edda; color: #155724; }
-        .status-completed { background: #d1ecf1; color: #0c5460; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
         .payment-card {
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -128,117 +166,117 @@
     </style>
 </head>
 <body>
+<div class="container">
+    <h1>Payment Management</h1>
+    <p>Manage PayPal payments, cancellations, and refunds</p>
+
+    <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/users">Users</a>
+        <a href="/bookings">Bookings</a>
+        <a href="/purchase">Purchase</a>
+        <a href="/payments">Payments</a>
+    </nav>
+
+    <!-- Get User Orders and Payments -->
     <div class="container">
-        <h1>Payment Management</h1>
-        <p>Manage PayPal payments, cancellations, and refunds</p>
+        <h2>View User Orders & Payments</h2>
+        <div class="form-group">
+            <label for="getUserOrdersId">User ID:</label>
+            <input type="number" id="getUserOrdersId" value="1">
+        </div>
+        <button onclick="loadUserOrders()" class="info">
+            Load User Orders & Payments
+        </button>
+        <div id="user-orders-response" class="response"></div>
+    </div>
 
-        <nav class="nav">
-            <a href="/">Home</a>
-            <a href="/users">Users</a>
-            <a href="/bookings">Bookings</a>
-            <a href="/purchase">Purchase</a>
-            <a href="/payments">Payments</a>
-        </nav>
+    <!-- PayPal Payment Actions -->
+    <div class="container">
+        <h2>PayPal Payment Actions</h2>
 
-        <!-- Get User Orders and Payments -->
-        <div class="container">
-            <h2>View User Orders & Payments</h2>
-            <div class="form-group">
-                <label for="getUserOrdersId">User ID:</label>
-                <input type="number" id="getUserOrdersId" value="1">
-            </div>
-            <button onclick="loadUserOrders()" class="info">
-                Load User Orders & Payments
+        <div class="form-group">
+            <label for="paymentId">Payment ID:</label>
+            <input type="number" id="paymentId" value="">
+            <small>Enter the payment ID from the order details above</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button onclick="capturePayment()" class="paypal">
+                Capture Payment (Complete)
             </button>
-            <div id="user-orders-response" class="response"></div>
+            <button onclick="cancelPayment()" class="danger">
+                Cancel Payment
+            </button>
+            <button onclick="refundPayment()" class="warning">
+                Refund Payment
+            </button>
         </div>
 
-        <!-- PayPal Payment Actions -->
-        <div class="container">
-            <h2>PayPal Payment Actions</h2>
+        <div id="payment-action-response" class="response"></div>
+    </div>
 
-            <div class="form-group">
-                <label for="paymentId">Payment ID:</label>
-                <input type="number" id="paymentId" value="">
-                <small>Enter the payment ID from the order details above</small>
-            </div>
+    <!-- Test PayPal Payment Flow -->
+    <div class="container">
+        <h2>Test PayPal Payment Flow</h2>
+        <p>Complete flow: Create Purchase → Approve via PayPal → Capture/Cancel/Refund</p>
 
-            <div style="margin-bottom: 20px;">
-                <button onclick="capturePayment()" class="paypal">
-                    Capture Payment (Complete)
-                </button>
-                <button onclick="cancelPayment()" class="danger">
-                    Cancel Payment
-                </button>
-                <button onclick="refundPayment()" class="warning">
-                    Refund Payment
-                </button>
-            </div>
-
-            <div id="payment-action-response" class="response"></div>
+        <!-- Step 1: Create test purchase -->
+        <div class="payment-card">
+            <h3>Step 1: Create Test Purchase</h3>
+            <button onclick="createTestPurchase()" class="info">
+                Create Test Purchase with PayPal
+            </button>
+            <div id="test-purchase-response" class="response"></div>
         </div>
 
-        <!-- Test PayPal Payment Flow -->
-        <div class="container">
-            <h2>Test PayPal Payment Flow</h2>
-            <p>Complete flow: Create Purchase → Approve via PayPal → Capture/Cancel/Refund</p>
-
-            <!-- Step 1: Create test purchase -->
-            <div class="payment-card">
-                <h3>Step 1: Create Test Purchase</h3>
-                <button onclick="createTestPurchase()" class="info">
-                    Create Test Purchase with PayPal
-                </button>
-                <div id="test-purchase-response" class="response"></div>
-            </div>
-
-            <!-- Step 2: Simulate PayPal approval -->
-            <div class="payment-card">
-                <h3>Step 2: PayPal Approval</h3>
-                <p>After creating a purchase, you'll get a PayPal approval URL. Click it to approve the payment.</p>
-                <div id="approval-link-container"></div>
-            </div>
-
-            <!-- Step 3: Capture or Cancel -->
-            <div class="payment-card">
-                <h3>Step 3: Complete or Cancel Payment</h3>
-                <p>After approval, use the payment actions above to capture or cancel the payment.</p>
-            </div>
+        <!-- Step 2: Simulate PayPal approval -->
+        <div class="payment-card">
+            <h3>Step 2: PayPal Approval</h3>
+            <p>After creating a purchase, you'll get a PayPal approval URL. Click it to approve the payment.</p>
+            <div id="approval-link-container"></div>
         </div>
 
-        <!-- Payment Status Legend -->
-        <div class="container">
-            <h2>Payment Status Guide</h2>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <span class="payment-status status-pending">PENDING</span>
-                <span class="payment-status status-approved">APPROVED</span>
-                <span class="payment-status status-completed">COMPLETED</span>
-                <span class="payment-status status-cancelled">CANCELLED</span>
-            </div>
-            <ul style="margin-top: 10px;">
-                <li><strong>PENDING:</strong> Payment created, awaiting user approval</li>
-                <li><strong>APPROVED:</strong> User approved via PayPal, ready to capture</li>
-                <li><strong>COMPLETED:</strong> Payment captured and completed</li>
-                <li><strong>CANCELLED:</strong> Payment was cancelled</li>
-            </ul>
+        <!-- Step 3: Capture or Cancel -->
+        <div class="payment-card">
+            <h3>Step 3: Complete or Cancel Payment</h3>
+            <p>After approval, use the payment actions above to capture or cancel the payment.</p>
         </div>
     </div>
 
-    <script>
-        async function loadUserOrders() {
-            const userId = document.getElementById('getUserOrdersId').value;
-            const target = document.getElementById('user-orders-response');
+    <!-- Payment Status Legend -->
+    <div class="container">
+        <h2>Payment Status Guide</h2>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <span class="payment-status status-pending">PENDING</span>
+            <span class="payment-status status-approved">APPROVED</span>
+            <span class="payment-status status-completed">COMPLETED</span>
+            <span class="payment-status status-cancelled">CANCELLED</span>
+        </div>
+        <ul style="margin-top: 10px;">
+            <li><strong>PENDING:</strong> Payment created, awaiting user approval</li>
+            <li><strong>APPROVED:</strong> User approved via PayPal, ready to capture</li>
+            <li><strong>COMPLETED:</strong> Payment captured and completed</li>
+            <li><strong>CANCELLED:</strong> Payment was cancelled</li>
+        </ul>
+    </div>
+</div>
 
-            try {
-                const response = await fetch(`/api/orders/user/${userId}`);
-                const orders = await response.json();
+<script>
+    async function loadUserOrders() {
+        const userId = document.getElementById('getUserOrdersId').value;
+        const target = document.getElementById('user-orders-response');
 
-                if (response.ok) {
-                    target.className = 'response success';
-                    let html = '<h3>User Orders:</h3>';
+        try {
+            const response = await fetch(`/api/orders/user/${userId}`);
+            const orders = await response.json();
 
-                    for (const order of orders) {
-                        html += `
+            if (response.ok) {
+                target.className = 'response success';
+                let html = '<h3>User Orders:</h3>';
+
+                for (const order of orders) {
+                    html += `
                             <div class="payment-card">
                                 <h4>Order #${order.id}</h4>
                                 <p><strong>Status:</strong> ${order.orderStatus}</p>
@@ -247,12 +285,12 @@
                                 <p><strong>Tickets:</strong> ${order.orderItems.length}</p>
                         `;
 
-                        // Try to get payment info for this order
-                        try {
-                            const paymentResponse = await fetch(`/api/payments/order/${order.id}`);
-                            if (paymentResponse.ok) {
-                                const payment = await paymentResponse.json();
-                                html += `
+                    // Try to get payment info for this order
+                    try {
+                        const paymentResponse = await fetch(`/api/payments/order/${order.id}`);
+                        if (paymentResponse.ok) {
+                            const payment = await paymentResponse.json();
+                            html += `
                                     <div style="margin-top: 10px; padding: 10px; background: #e9ecef; border-radius: 4px;">
                                         <h5>Payment Details:</h5>
                                         <p><strong>Payment ID:</strong> ${payment.id}</p>
@@ -264,154 +302,154 @@
                                         <button onclick="document.getElementById('paymentId').value='${payment.id}'">Use This Payment ID</button>
                                     </div>
                                 `;
-                            }
-                        } catch (e) {
-                            html += '<p><em>No payment information available</em></p>';
                         }
-
-                        html += '</div>';
+                    } catch (e) {
+                        html += '<p><em>No payment information available</em></p>';
                     }
 
-                    target.innerHTML = html;
-                } else {
-                    target.className = 'response error';
-                    target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
+                    html += '</div>';
                 }
-            } catch (error) {
+
+                target.innerHTML = html;
+            } else {
                 target.className = 'response error';
-                target.textContent = 'Error: ' + error.message;
+                target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
             }
+        } catch (error) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    async function capturePayment() {
+        const paymentId = document.getElementById('paymentId').value;
+        if (!paymentId) {
+            alert('Please enter a payment ID');
+            return;
         }
 
-        async function capturePayment() {
-            const paymentId = document.getElementById('paymentId').value;
-            if (!paymentId) {
-                alert('Please enter a payment ID');
-                return;
-            }
+        const target = document.getElementById('payment-action-response');
 
-            const target = document.getElementById('payment-action-response');
+        try {
+            const response = await fetch(`/api/payments/${paymentId}/capture`, {
+                method: 'POST'
+            });
 
-            try {
-                const response = await fetch(`/api/payments/${paymentId}/capture`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    target.className = 'response success';
-                    target.innerHTML = `
+            if (response.ok) {
+                const result = await response.json();
+                target.className = 'response success';
+                target.innerHTML = `
                         <h3>Payment Captured Successfully!</h3>
                         <pre>${JSON.stringify(result, null, 2)}</pre>
                     `;
-                } else {
-                    target.className = 'response error';
-                    target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
-                }
-            } catch (error) {
+            } else {
                 target.className = 'response error';
-                target.textContent = 'Error: ' + error.message;
+                target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
             }
+        } catch (error) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    async function cancelPayment() {
+        const paymentId = document.getElementById('paymentId').value;
+        if (!paymentId) {
+            alert('Please enter a payment ID');
+            return;
         }
 
-        async function cancelPayment() {
-            const paymentId = document.getElementById('paymentId').value;
-            if (!paymentId) {
-                alert('Please enter a payment ID');
-                return;
-            }
+        if (!confirm('Are you sure you want to cancel this payment?')) {
+            return;
+        }
 
-            if (!confirm('Are you sure you want to cancel this payment?')) {
-                return;
-            }
+        const target = document.getElementById('payment-action-response');
 
-            const target = document.getElementById('payment-action-response');
+        try {
+            const response = await fetch(`/api/payments/${paymentId}/cancel`, {
+                method: 'POST'
+            });
 
-            try {
-                const response = await fetch(`/api/payments/${paymentId}/cancel`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    target.className = 'response success';
-                    target.innerHTML = `
+            if (response.ok) {
+                const result = await response.json();
+                target.className = 'response success';
+                target.innerHTML = `
                         <h3>Payment Cancelled Successfully!</h3>
                         <pre>${JSON.stringify(result, null, 2)}</pre>
                     `;
-                } else {
-                    target.className = 'response error';
-                    target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
-                }
-            } catch (error) {
+            } else {
                 target.className = 'response error';
-                target.textContent = 'Error: ' + error.message;
+                target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
             }
+        } catch (error) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    async function refundPayment() {
+        const paymentId = document.getElementById('paymentId').value;
+        if (!paymentId) {
+            alert('Please enter a payment ID');
+            return;
         }
 
-        async function refundPayment() {
-            const paymentId = document.getElementById('paymentId').value;
-            if (!paymentId) {
-                alert('Please enter a payment ID');
-                return;
-            }
+        if (!confirm('Are you sure you want to refund this payment?')) {
+            return;
+        }
 
-            if (!confirm('Are you sure you want to refund this payment?')) {
-                return;
-            }
+        const target = document.getElementById('payment-action-response');
 
-            const target = document.getElementById('payment-action-response');
+        try {
+            const response = await fetch(`/api/payments/${paymentId}/refund`, {
+                method: 'POST'
+            });
 
-            try {
-                const response = await fetch(`/api/payments/${paymentId}/refund`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    target.className = 'response success';
-                    target.innerHTML = `
+            if (response.ok) {
+                const result = await response.json();
+                target.className = 'response success';
+                target.innerHTML = `
                         <h3>Payment Refunded Successfully!</h3>
                         <pre>${JSON.stringify(result, null, 2)}</pre>
                     `;
-                } else {
-                    target.className = 'response error';
-                    target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
-                }
-            } catch (error) {
+            } else {
                 target.className = 'response error';
-                target.textContent = 'Error: ' + error.message;
+                target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
             }
+        } catch (error) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + error.message;
         }
+    }
 
-        async function createTestPurchase() {
-            const target = document.getElementById('test-purchase-response');
-            const approvalContainer = document.getElementById('approval-link-container');
+    async function createTestPurchase() {
+        const target = document.getElementById('test-purchase-response');
+        const approvalContainer = document.getElementById('approval-link-container');
 
-            const payload = {
-                userId: 1,
-                tickets: [
-                    { attractionName: "Test Ride 1" },
-                    { attractionName: "Test Ride 2" },
-                    { attractionName: "Test Ride 3" },
-                    { attractionName: "Test Ride 4" }
-                ]
-            };
+        const payload = {
+            userId: 1,
+            tickets: [
+                {attractionName: "Test Ride 1"},
+                {attractionName: "Test Ride 2"},
+                {attractionName: "Test Ride 3"},
+                {attractionName: "Test Ride 4"}
+            ]
+        };
 
-            try {
-                const response = await fetch('/api/purchases', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Idempotency-Key': 'test-payment-flow-' + Date.now()
-                    },
-                    body: JSON.stringify(payload)
-                });
+        try {
+            const response = await fetch('/api/purchases', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Idempotency-Key': 'test-payment-flow-' + Date.now()
+                },
+                body: JSON.stringify(payload)
+            });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    target.className = 'response success';
-                    target.innerHTML = `
+            if (response.ok) {
+                const result = await response.json();
+                target.className = 'response success';
+                target.innerHTML = `
                         <h3>Test Purchase Created!</h3>
                         <p><strong>Order ID:</strong> ${result.order.id}</p>
                         <p><strong>Payment ID:</strong> ${result.payment.id}</p>
@@ -419,45 +457,45 @@
                         <button onclick="document.getElementById('paymentId').value='${result.payment.id}'">Use This Payment ID</button>
                     `;
 
-                    if (result.payment.paypalApprovalUrl) {
-                        approvalContainer.innerHTML = `
+                if (result.payment.paypalApprovalUrl) {
+                    approvalContainer.innerHTML = `
                             <button onclick="window.open('${result.payment.paypalApprovalUrl}', '_blank')" class="paypal">
                                 🔗 Open PayPal Approval Page
                             </button>
                             <p><small>Click to approve the payment in PayPal, then use the payment actions above</small></p>
                         `;
-                    }
-                } else {
-                    target.className = 'response error';
-                    target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
                 }
-            } catch (error) {
+            } else {
                 target.className = 'response error';
-                target.textContent = 'Error: ' + error.message;
+                target.textContent = 'Error: ' + response.status + ' - ' + await response.text();
+            }
+        } catch (error) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + error.message;
+        }
+    }
+
+    // Handle HTMX responses for any HTMX calls
+    document.body.addEventListener('htmx:responseError', function (evt) {
+        const target = document.getElementById(evt.detail.target.id);
+        if (target) {
+            target.className = 'response error';
+            target.textContent = 'Error: ' + evt.detail.xhr.status + ' - ' + evt.detail.xhr.responseText;
+        }
+    });
+
+    document.body.addEventListener('htmx:afterRequest', function (evt) {
+        const target = document.getElementById(evt.detail.target.id);
+        if (target && evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+            target.className = 'response success';
+            try {
+                const json = JSON.parse(evt.detail.xhr.responseText);
+                target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
+            } catch (e) {
+                target.textContent = 'Success: ' + evt.detail.xhr.responseText;
             }
         }
-
-        // Handle HTMX responses for any HTMX calls
-        document.body.addEventListener('htmx:responseError', function(evt) {
-            const target = document.getElementById(evt.detail.target.id);
-            if (target) {
-                target.className = 'response error';
-                target.textContent = 'Error: ' + evt.detail.xhr.status + ' - ' + evt.detail.xhr.responseText;
-            }
-        });
-
-        document.body.addEventListener('htmx:afterRequest', function(evt) {
-            const target = document.getElementById(evt.detail.target.id);
-            if (target && evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
-                target.className = 'response success';
-                try {
-                    const json = JSON.parse(evt.detail.xhr.responseText);
-                    target.textContent = 'Success:\n' + JSON.stringify(json, null, 2);
-                } catch (e) {
-                    target.textContent = 'Success: ' + evt.detail.xhr.responseText;
-                }
-            }
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
