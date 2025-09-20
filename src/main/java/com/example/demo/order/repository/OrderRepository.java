@@ -16,6 +16,9 @@ public interface OrderRepository extends BaseRepository<OrderEntity, Long> {
     @Query("SELECT o FROM OrderEntity o LEFT JOIN FETCH o.orderItems WHERE o.id = :orderId")
     OrderEntity findByIdWithItems(Long orderId);
 
+    @Query("SELECT o FROM OrderEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderNumber = :orderNumber")
+    OrderEntity findByOrderNumberWithItems(String orderNumber);
+
     long countByUserIdAndOrderStatusNot(Long userId, OrderStatus orderStatus);
 
 }

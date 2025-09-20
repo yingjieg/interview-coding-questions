@@ -17,8 +17,8 @@ public class EmailService {
         // TODO: Implement actual email sending with SMTP
     }
 
-    public void sendWelcomeEmail(String email, String firstName) {
-        log.info("Sending welcome email to: {} ({})", email, firstName);
+    public void sendWelcomeEmail(String email, String fullName) {
+        log.info("Sending welcome email to: {} ({})", email, fullName);
         // TODO: Implement actual email sending with SMTP
     }
 }

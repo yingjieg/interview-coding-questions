@@ -34,20 +34,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Set allowed origins from YAML configuration
         configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
-
-        // Set allowed methods from YAML configuration
         configuration.setAllowedMethods(corsProperties.getAllowedMethods());
-
-        // Set allowed headers
         configuration.addAllowedHeader(corsProperties.getAllowedHeaders());
-
-        // Set allow credentials
         configuration.setAllowCredentials(corsProperties.isAllowCredentials());
-
-        // Set max age
         configuration.setMaxAge(corsProperties.getMaxAge());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -62,10 +52,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints - no authentication required
-                        .requestMatchers("/api/auth/**", "/api/users/register", "/api/users/login", "/api/users/forgot-password", "/api/users/reset-password", "/api/users/verify").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/", "/users", "/orders", "/bookings", "/purchase", "/static/**", "/*.html", "/*.css", "/*.js").permitAll()
-                        .requestMatchers("/api/stripe/**").permitAll() // Add Stripe endpoints as public for now
-                        .requestMatchers("/api/payments/paypal/**").permitAll() // PayPal callbacks are public
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
+                        .requestMatchers("/", "/users", "/orders", "/bookings", "/purchase").permitAll()
+                        .requestMatchers("/static/**", "/*.html", "/*.css", "/*.js").permitAll()
+                        .requestMatchers("/api/stripe/**").permitAll() // Stripe endpoints for payment processing
+                        .requestMatchers("/api/payments/paypal/success", "/api/payments/paypal/cancel").permitAll() // PayPal callbacks are public
                         // Protected endpoints - require authentication
                         .requestMatchers("/api/orders/**", "/api/bookings/**", "/api/purchases/**", "/api/payments/**").authenticated()
                         .anyRequest().authenticated()

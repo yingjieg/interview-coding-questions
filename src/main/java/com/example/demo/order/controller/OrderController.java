@@ -35,4 +35,14 @@ public class OrderController {
         List<OrderResponseDto> orders = orderService.getUserOrders(userId);
         return ResponseEntity.ok(orders);
     }
+
+    @GetMapping("/number/{orderNumber}")
+    @Operation(summary = "Get order by order number")
+    @ApiResponse(responseCode = "200", description = "Order found")
+    @ApiResponse(responseCode = "404", description = "Order not found")
+    @ApiResponse(responseCode = "400", description = "Invalid order number format")
+    public ResponseEntity<OrderResponseDto> getOrderByOrderNumber(@PathVariable String orderNumber) {
+        OrderResponseDto order = orderService.getOrderByOrderNumber(orderNumber);
+        return ResponseEntity.ok(order);
+    }
 }

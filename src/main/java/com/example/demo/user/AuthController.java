@@ -31,8 +31,7 @@ public class AuthController {
 
         UserDto userDto = UserDto.builder()
                 .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .enabled(user.getEnabled())
                 .emailVerified(user.getEmailVerified())
@@ -62,5 +61,45 @@ public class AuthController {
     public ResponseEntity<Void> logout() {
         // TODO implement blacklist by Redis
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Request password reset", description = "Request password reset email")
+    @ApiResponse(responseCode = "200", description = "Password reset email sent")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> requestPasswordReset(@Valid @RequestBody com.example.demo.user.dto.PasswordResetDto resetDto) {
+        log.info("Password reset request for email: {}", resetDto.getEmail());
+        userService.requestPasswordReset(resetDto);
+        return ResponseEntity.ok("If the email exists, a password reset link has been sent.");
+    }
+
+    @Operation(summary = "Reset password with token", description = "Reset password using reset token")
+    @ApiResponse(responseCode = "200", description = "Password reset successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid or expired token")
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam String token,
+                                                @RequestParam String newPassword) {
+        log.info("Password reset attempt with token");
+        boolean resetSuccess = userService.resetPassword(token, newPassword);
+
+        if (resetSuccess) {
+            return ResponseEntity.ok("Password reset successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid or expired token");
+        }
+    }
+
+    @Operation(summary = "Verify email address", description = "Verify user email with verification token")
+    @ApiResponse(responseCode = "200", description = "Email verified successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid verification token")
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam String token) {
+        log.info("Email verification attempt");
+        boolean verificationSuccess = userService.verifyEmail(token);
+
+        if (verificationSuccess) {
+            return ResponseEntity.ok("Email verified successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid verification token");
+        }
     }
 }

@@ -23,8 +23,6 @@ public class JwtService {
     @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
     private long jwtExpiration;
 
-    @Value("${jwt.refresh-token.expiration:604800000}") // 7 days in milliseconds
-    private long refreshExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -43,9 +41,6 @@ public class JwtService {
         return buildToken(extraClaims, userEmail, jwtExpiration);
     }
 
-    public String generateRefreshToken(String userEmail) {
-        return buildToken(new HashMap<>(), userEmail, refreshExpiration);
-    }
 
     private String buildToken(
             Map<String, Object> extraClaims,
@@ -106,9 +101,9 @@ public class JwtService {
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
-                .verifyWith(getSignInKey())
-                .build()
-                .parseSignedClaims(token);
+                    .verifyWith(getSignInKey())
+                    .build()
+                    .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("Invalid JWT token: {}", e.getMessage());

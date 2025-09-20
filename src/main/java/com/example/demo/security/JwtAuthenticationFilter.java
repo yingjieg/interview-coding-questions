@@ -37,9 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         log.debug("JWT Filter - Processing request: {} {}", request.getMethod(), request.getServletPath());
 
-        if (request.getServletPath().contains("/api/auth") ||
-            request.getServletPath().contains("/api/users/register") ||
-            request.getServletPath().contains("/api/users/login")) {
+        if (request.getServletPath().contains("/api/auth")) {
             log.debug("JWT Filter - Skipping authentication for public endpoint: {}", request.getServletPath());
             filterChain.doFilter(request, response);
             return;

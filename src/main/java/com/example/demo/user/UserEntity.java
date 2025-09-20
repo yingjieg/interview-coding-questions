@@ -24,11 +24,8 @@ public class UserEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "first_name", length = 50)
-    private String firstName;
-
-    @Column(name = "last_name", length = 50)
-    private String lastName;
+    @Column(name = "full_name", nullable = false, length = 100)
+    private String fullName;
 
     @Column(nullable = false)
     private Boolean enabled = true;

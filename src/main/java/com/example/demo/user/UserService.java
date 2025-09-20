@@ -43,8 +43,7 @@ public class UserService {
         UserEntity user = new UserEntity();
         user.setEmail(registrationDto.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-        user.setFirstName(registrationDto.getFirstName());
-        user.setLastName(registrationDto.getLastName());
+        user.setFullName(registrationDto.getFullName());
         user.setEnabled(true);
         user.setEmailVerified(false);
 
@@ -72,7 +71,7 @@ public class UserService {
         user.setResetToken(null);
         userRepository.save(user);
 
-        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFullName());
 
         log.info("Email verified successfully for: {}", user.getEmail());
         return true;
@@ -117,15 +116,13 @@ public class UserService {
             return null;
         }
 
-        // Generate JWT tokens
+        // Generate JWT token
         String accessToken = jwtService.generateToken(user.getEmail());
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         // Build user DTO
         UserDto userDto = UserDto.builder()
                 .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .enabled(user.getEnabled())
                 .emailVerified(user.getEmailVerified())
@@ -135,7 +132,6 @@ public class UserService {
 
         return AuthenticationResponseDto.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(86400) // 24 hours in seconds
                 .user(userDto)

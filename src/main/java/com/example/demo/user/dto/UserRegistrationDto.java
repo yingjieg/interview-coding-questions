@@ -17,9 +17,7 @@ public class UserRegistrationDto {
             message = "Password must contain at least one lowercase letter, one uppercase letter, and one digit")
     private String password;
 
-    @Size(max = 50, message = "First name must not exceed 50 characters")
-    private String firstName;
-
-    @Size(max = 50, message = "Last name must not exceed 50 characters")
-    private String lastName;
+    @NotBlank(message = "Full name is required")
+    @Size(max = 100, message = "Full name must not exceed 100 characters")
+    private String fullName;
 }

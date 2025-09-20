@@ -146,7 +146,7 @@ public class PaymentController {
     private String getFrontendUrl() {
         // Get from environment variable or default to localhost
         return System.getProperty("frontend.url",
-               System.getenv("FRONTEND_URL") != null ? System.getenv("FRONTEND_URL") : "http://localhost:3001");
+                System.getenv("FRONTEND_URL") != null ? System.getenv("FRONTEND_URL") : "http://localhost:3001");
     }
 
     @PostMapping("/{paymentId}/cancel")

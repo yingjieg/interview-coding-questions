@@ -11,8 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserDto {
     private Long id;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private String email;
     private boolean enabled;
     private boolean emailVerified;

@@ -26,11 +26,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final OrderNumberGenerator orderNumberGenerator;
 
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderMapper orderMapper) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, OrderMapper orderMapper, OrderNumberGenerator orderNumberGenerator) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.orderMapper = orderMapper;
+        this.orderNumberGenerator = orderNumberGenerator;
     }
 
     @Transactional
@@ -62,11 +64,18 @@ public class OrderService {
 
         order.setOrderItems(orderItems);
 
-        // Save order
+        // Save order first to get the ID
         OrderEntity savedOrder = orderRepository.save(order);
 
-        log.info("Order created successfully for user {}",
-                user.getEmail());
+        // Generate and set order number using the saved order ID
+        String orderNumber = orderNumberGenerator.generateOrderNumber(savedOrder.getId());
+        savedOrder.setOrderNumber(orderNumber);
+
+        // Save again with the order number
+        savedOrder = orderRepository.save(savedOrder);
+
+        log.info("Order created successfully for user {} with order number {}",
+                user.getEmail(), orderNumber);
 
         return orderMapper.toResponseDto(savedOrder);
     }
@@ -76,6 +85,20 @@ public class OrderService {
         OrderEntity order = orderRepository.findByIdWithItems(orderId);
         if (order == null) {
             throw new RecordNotFoundException("Order", orderId);
+        }
+
+        return orderMapper.toResponseDto(order);
+    }
+
+    public OrderResponseDto getOrderByOrderNumber(String orderNumber) {
+        // Validate order number format first
+        if (!orderNumberGenerator.isValidOrderNumber(orderNumber)) {
+            throw new IllegalArgumentException("Invalid order number format: " + orderNumber);
+        }
+
+        OrderEntity order = orderRepository.findByOrderNumberWithItems(orderNumber);
+        if (order == null) {
+            throw new RecordNotFoundException("Order with order number", orderNumber);
         }
         return orderMapper.toResponseDto(order);
     }
